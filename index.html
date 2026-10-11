@@ -67,7 +67,8 @@ function parseAwlrFile(buffer,name){
  if(!output.length)throw Error('Tidak ada kolom Waktu dan Rerata Tinggi Muka Air yang valid pada '+name);
  return output;
 }
-el('uploadAwlr').addEventListener('click',async()=>{
+ const el=id=>document.getElementById(id);
+ el('uploadAwlr').addEventListener('click',async()=>{
  if(!clientReady())return;
  if(typeof XLSX==='undefined'){el('awlrStatus').textContent='Pembaca Excel gagal dimuat. Periksa koneksi internet.';return;}
  const files=[...el('awlrFiles').files];if(!files.length){el('awlrStatus').textContent='Pilih file Excel terlebih dahulu.';return;}
@@ -78,7 +79,6 @@ el('uploadAwlr').addEventListener('click',async()=>{
  await loadAwlr();el('awlrStatus').textContent='Berhasil: '+saved+' data diproses. '+awlrObservations.length+' pengukuran unik tersimpan di Supabase.';
  }catch(e){el('awlrStatus').textContent='Upload gagal: '+e.message;}finally{btn.disabled=false}
 });
-const el=id=>document.getElementById(id);
 const historyList=el('historyList'),historyEmpty=el('historyEmpty'),clearHistory=el('clearHistory');
 const setMessage=t=>el('authMessage').textContent=t||'';
 const setStatus=t=>el('syncStatus').textContent=t||'';
