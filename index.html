@@ -14,10 +14,20 @@ form.addEventListener('submit',ev=>{
  const pattern=HOURLY_PATTERN[wibHour()];const d=learnedDelta(wibHour());
  document.getElementById('hasil').textContent=fmt(n+d)+' mdpl';
  document.getElementById('delta').textContent=(d>0?'Perkiraan naik +':d<0?'Perkiraan turun ':'Perkiraan stabil ')+fmt(Math.abs(d))+' m';
- document.getElementById('caption').textContent='';result.classList.add('show');
+
+document.getElementById('caption').textContent =
+  'Sumber: ' + predictionInfo.source +
+  ' | Pasangan AWLR: ' + predictionInfo.pairs +
+  ' | Bobot AWLR: ' + predictionInfo.awlrWeight + '%';
+
  saveCheck(n,n+d,d,pattern.count);
 });
 let client=null, user=null, historyEntries=[], awlrObservations=[];
+let predictionInfo = {
+  source: 'Pola tahunan',
+  pairs: 0,
+  awlrWeight: 0
+};
 function medianNums(a){if(!a.length)return 0;const s=[...a].sort((a,b)=>a-b);const k=s.length>>1;return s.length%2?s[k]:(s[k-1]+s[k])/2}
 function learnedDelta(hour) {
   const baseline = HOURLY_PATTERN[hour].median;
@@ -61,7 +71,14 @@ function learnedDelta(hour) {
   // Gunakan riwayat hingga 30 hari bila data terbaru kurang
   const chosen = recent.length >= 3 ? recent : hourly;
   // Belum cukup data: gunakan pola tahunan
-  if (chosen.length < 3) return baseline;
+  if (chosen.length < 3) {
+  predictionInfo = {
+    source: 'Pola tahunan',
+    pairs: chosen.length,
+    awlrWeight: 0
+  };
+  return baseline;
+}
   // Beri pengaruh lebih besar pada pengamatan terbaru
   const weights = chosen.map(x => ({
     ...x,
@@ -83,7 +100,14 @@ function learnedDelta(hour) {
     }
   }
   // 80% AWLR aktual + 20% pola tahunan
-  return (0.80 * estimate) + (0.20 * baseline);
+ 
+predictionInfo = {
+  source: 'Adaptif AWLR + Pola tahunan',
+  pairs: chosen.length,
+  awlrWeight: 80
+};
+ 
+ return (0.80 * estimate) + (0.20 * baseline);
 }
  
 async function loadAwlr() {
