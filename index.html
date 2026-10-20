@@ -29,7 +29,8 @@
 </section><section aria-label="Riwayat pengecekan" class="history" hidden=""><div class="history-head"><strong>Riwayat per tanggal (24 jam)</strong><button class="clear-all" id="clearHistory" type="button">Hapus semua</button></div><div class="daily-controls"><div><label for="historyDate">Tanggal riwayat (WIB)</label><input id="historyDate" type="date" aria-label="Tanggal riwayat"/></div><button type="button" id="todayHistory">Hari ini</button><button type="button" id="csvDate">Ekspor CSV tanggal ini</button><button type="button" id="csvAll">Ekspor semua CSV</button></div><div class="day-caption" id="dayCount"></div><div class="history-list" id="historyList"></div><div class="history-empty" id="historyEmpty">Belum ada riwayat pengecekan di akun ini.</div><div class="status" id="syncStatus" role="status"></div></section></section></main><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script>
 // Configuration lives in config.js, which contains only the PUBLIC Supabase anon key.
 const form=document.getElementById('f'),input=document.getElementById('tma'),result=document.getElementById('result'),err=document.getElementById('err');
-const fmt=n=>n.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
+const round2=n=>Number(Number(n).toFixed(2));
+const fmt=n=>round2(n).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
 // Forecast Tolls ODGJ: hanya AWLR historis terbaru + pola operasi manual.
 // Tidak ada HOURLY_PATTERN/data tahunan sebagai fallback.
 const WIB_TZ='Asia/Jakarta';
@@ -182,17 +183,18 @@ form.addEventListener('submit',ev=>{
   if(!raw||!Number.isFinite(n)){err.textContent='Masukkan angka TMA yang valid.';err.classList.add('show');return;}
   try{
     const f=operationalForecast(n);
-    // Kalkulasi internal tetap presisi penuh; tampilan dan riwayat konsisten 2 angka desimal.
-    const predictedRounded=Number(f.predicted.toFixed(2));
-    const deltaRounded=Number((predictedRounded-n).toFixed(2));
+    // Pembulatan dilakukan sebelum hasil ditampilkan maupun disimpan.
+    const currentRounded=round2(n);
+    const predictedRounded=round2(f.predicted);
+    const deltaRounded=round2(predictedRounded-currentRounded);
     el('hasil').textContent=fmt(predictedRounded)+' mdpl';
     const direction=deltaRounded>0?'Perkiraan naik +':deltaRounded<0?'Perkiraan turun ':'Perkiraan stabil ';
     el('delta').textContent=direction+fmt(Math.abs(deltaRounded))+' m ('+(deltaRounded*100).toLocaleString('id-ID',{minimumFractionDigits:0,maximumFractionDigits:0})+' cm)';
     el('caption').textContent='Model: AWLR aktual hari-hari sebelumnya + pola operasi. '+f.historyCount+' pasangan 1 jam dipakai dari '+f.historyRawCount+' pasangan tersedia.';
-    el('forecastDetails').textContent='Rata-rata perubahan AWLR: '+(f.historyDelta>=0?'+':'')+fmt(f.historyDelta)+' m/jam ('+f.histDirection+'). Neraca debit efektif: '+(f.net>=0?'+':'')+f.net.toFixed(2)+' m³/s ('+f.opDirection+'). Koreksi outflow terpilih: '+(f.outflowOffset>=0?'+':'')+f.outflowOffset.toFixed(2)+' m³/s dari nominal; rentang neraca jika outflow nominal ±2: '+f.netLow.toFixed(2)+' sampai '+f.netHigh.toFixed(2)+' m³/s. Bobot operasi pendukung: '+(f.operationWeight*100).toFixed(0)+'%.';
+    el('forecastDetails').textContent='Rata-rata perubahan AWLR: '+(f.historyDelta>=0?'+':'')+fmt(f.historyDelta)+' m/jam ('+f.histDirection+'). Neraca debit efektif: '+(f.net>=0?'+':'')+round2(f.net).toFixed(2)+' m³/s ('+f.opDirection+'). Koreksi outflow terpilih: '+(f.outflowOffset>=0?'+':'')+round2(f.outflowOffset).toFixed(2)+' m³/s dari nominal; rentang neraca jika outflow nominal ±2: '+round2(f.netLow).toFixed(2)+' sampai '+round2(f.netHigh).toFixed(2)+' m³/s. Bobot operasi pendukung: '+(f.operationWeight*100).toFixed(0)+'%.';
     el('forecastWarnings').textContent=f.notes.join(' ');
     result.classList.add('show');
-    saveCheck(Number(n.toFixed(2)),predictedRounded,deltaRounded,f.historyCount);
+    saveCheck(currentRounded,predictedRounded,deltaRounded,f.historyCount);
   }catch(e){err.textContent=e.message;err.classList.add('show');}
 });
 
@@ -384,7 +386,7 @@ async function loadHistory(){
 }
 function downloadCSV(entries,filename){
  const rows=[['tanggal_WIB','jam_WIB','tma_input_mdpl','prediksi_1_jam_mdpl','selisih_prediksi_minus_input_m']];
- for(const x of entries){const d=new Date(x.created_at);const date=wibDate(x.created_at);const time=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(d);const current=Number(x.current_tma),pred=Number(x.predicted_tma);rows.push([date,time,current.toFixed(2),pred.toFixed(2),(pred-current).toFixed(2)])}
+ for(const x of entries){const d=new Date(x.created_at);const date=wibDate(x.created_at);const time=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(d);const current=Number(x.current_tma),pred=Number(x.predicted_tma);rows.push([date,time,round2(current).toFixed(2),round2(pred).toFixed(2),round2(pred-current).toFixed(2)])}
  const csv='\uFEFF'+rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n');
  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)
 }
@@ -392,7 +394,7 @@ el('historyDate').addEventListener('change',ev=>{if(!ev.target.value)return;sele
 el('todayHistory').addEventListener('click',()=>{selectedDate=todayWib();el('historyDate').value=selectedDate;drawHistory()});
 el('csvDate').addEventListener('click',()=>{if(!clientReady())return;downloadCSV(filteredHistory(),'tolls-odgj-'+selectedDate+'.csv')});
 el('csvAll').addEventListener('click',()=>{if(!clientReady())return;downloadCSV(historyEntries,'tolls-odgj-semua-riwayat-'+todayWib()+'.csv')});
-async function saveCheck(current,predicted,delta,count){if(!clientReady())return;setStatus('Menyimpan pengecekan...');const {error}=await client.from('tma_checks').insert({user_id:user.id,current_tma:current,predicted_tma:predicted,delta_tma:delta,neighbor_count:count});if(error){setStatus('Penyimpanan GAGAL: '+error.message);alert('Prediksi tampil, tetapi riwayat gagal disimpan. '+error.message);return}selectedDate=todayWib();el('historyDate').value=selectedDate;await loadHistory()}
+async function saveCheck(current,predicted,delta,count){if(!clientReady())return;setStatus('Menyimpan pengecekan...');const {error}=await client.from('tma_checks').insert({user_id:user.id,current_tma:round2(current),predicted_tma:round2(predicted),delta_tma:round2(delta),neighbor_count:count});if(error){setStatus('Penyimpanan GAGAL: '+error.message);alert('Prediksi tampil, tetapi riwayat gagal disimpan. '+error.message);return}selectedDate=todayWib();el('historyDate').value=selectedDate;await loadHistory()}
 clearHistory.addEventListener('click',async()=>{if(!clientReady())return;if(!confirm('Hapus SEMUA riwayat seluruh tanggal secara permanen?'))return;const {error}=await client.from('tma_checks').delete().eq('user_id',user.id);if(error){alert('Gagal menghapus: '+error.message);return}await loadHistory()});
 el('loginBtn').addEventListener('click',async()=>{if(!client)return;setMessage('Memproses login...');const {error}=await client.auth.signInWithPassword({email:el('email').value.trim(),password:el('password').value});setMessage(error?'Gagal masuk: '+error.message:'')});
 el('registerBtn').addEventListener('click',async()=>{if(!client)return;setMessage('Mendaftarkan akun...');const {error,data}=await client.auth.signUp({email:el('email').value.trim(),password:el('password').value});setMessage(error?'Gagal daftar: '+error.message:data.session?'Akun berhasil dibuat.':'Periksa email untuk konfirmasi pendaftaran, lalu masuk.')});
