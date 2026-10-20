@@ -18,7 +18,7 @@
 .op-alert{background:#fff7e9;color:#79541c;border-radius:9px;padding:10px;margin:10px 0;font-size:12px;line-height:1.5}
 .result .meta{font-size:12px;color:#517187;line-height:1.65;overflow-wrap:anywhere}
 .result .note-warning{font-size:12px;color:#865824;margin-top:9px;line-height:1.5}
-</style></head><body><main class="wrap"><div class="head"><img src="logo-odgj.png" class="logoimg" alt="Logo ODGJ"><div><strong>Tolls ODGJ</strong><div class="muted">AWLR + Pola Operasi · 1 jam ke depan</div></div></div><section class="card"><div class="auth" id="authPanel"><div class="eyebrow">Akun pribadi</div><div class="auth-fields" id="loginFields"><label for="email">Email</label><input autocomplete="email" id="email" placeholder="email@contoh.com" type="email"/><label for="password">Password</label><input autocomplete="current-password" id="password" placeholder="Minimal 6 karakter" type="password"/><button id="loginBtn" type="button">Masuk</button><button class="secondary" id="registerBtn" type="button">Daftar akun</button></div><div hidden="" id="accountPanel"><p id="accountEmail"></p><button class="secondary" id="logoutBtn" type="button">Keluar akun</button></div><div aria-live="polite" class="auth-message" id="authMessage"></div></div><form hidden="" id="f"><label for="tma">TMA</label><div class="inp"><input aria-describedby="petunjuk" autocomplete="off" autofocus="" id="tma" inputmode="decimal" placeholder="Contoh: 66,50" required="" type="text"/><span class="unit">mdpl</span></div><div class="hint" id="petunjuk">Masukkan angka lalu tekan <b>Enter</b>.</div><button type="submit">Prediksi 1 Jam Berikutnya →</button></form><div class="error" id="err" role="alert"></div><section aria-live="polite" class="result" id="result"><div class="eyebrow">Perkiraan TMA +1 jam</div><div class="val" id="hasil"></div><span class="pill" id="delta"></span><div class="line"></div><small id="caption"></small><div class="meta" id="forecastDetails" style="margin-top:9px"></div><div class="note-warning" id="forecastWarnings"></div></section><section class="awlr-upload" id="awlrPanel" hidden style="margin-top:20px;padding:16px;border:1px solid #dbe7ee;border-radius:14px;background:#f9fcfe"><strong>Belajar dari Excel AWLR</strong><p style="font-size:12px;color:#64798b;line-height:1.5">AWLR kemarin jadi acuan pertama. Jika arahnya berbeda dengan neraca debit yang pasti naik/turun dalam rentang outflow ±2 m³/s, sistem boleh memilih AWLR pada jam sama dari hari-hari sebelumnya (maksimal 7 hari). Jika tidak ada AWLR yang mendukung, prediksi tidak dipaksakan.</p><input id="awlrFiles" type="file" accept=".xlsx,.xls" multiple style="font-size:13px;padding:10px;border:1px solid #cbdbe7;border-radius:10px;width:100%"><button type="button" id="uploadAwlr">Upload Data AWLR</button><div id="awlrStatus" style="margin-top:8px;font-size:12px;color:#476176" role="status"></div></section><section class="op-panel" id="opPanel" hidden>
+</style></head><body><main class="wrap"><div class="head"><img src="logo-odgj.png" class="logoimg" alt="Logo ODGJ"><div><strong>Tolls ODGJ</strong><div class="muted">AWLR + Pola Operasi · 1 jam ke depan</div></div></div><section class="card"><div class="auth" id="authPanel"><div class="eyebrow">Akun pribadi</div><div class="auth-fields" id="loginFields"><label for="email">Email</label><input autocomplete="email" id="email" placeholder="email@contoh.com" type="email"/><label for="password">Password</label><input autocomplete="current-password" id="password" placeholder="Minimal 6 karakter" type="password"/><button id="loginBtn" type="button">Masuk</button><button class="secondary" id="registerBtn" type="button">Daftar akun</button></div><div hidden="" id="accountPanel"><p id="accountEmail"></p><button class="secondary" id="logoutBtn" type="button">Keluar akun</button></div><div aria-live="polite" class="auth-message" id="authMessage"></div></div><form hidden="" id="f"><label for="tma">TMA</label><div class="inp"><input aria-describedby="petunjuk" autocomplete="off" autofocus="" id="tma" inputmode="decimal" placeholder="Contoh: 66,50" required="" type="text"/><span class="unit">mdpl</span></div><div class="hint" id="petunjuk">Masukkan angka lalu tekan <b>Enter</b>.</div><button type="submit">Prediksi 1 Jam Berikutnya →</button></form><div class="error" id="err" role="alert"></div><section aria-live="polite" class="result" id="result"><div class="eyebrow">Perkiraan TMA +1 jam</div><div class="val" id="hasil"></div><span class="pill" id="delta"></span><div class="line"></div><small id="caption"></small><div class="meta" id="forecastDetails" style="margin-top:9px"></div><div class="note-warning" id="forecastWarnings"></div></section><section class="awlr-upload" id="awlrPanel" hidden style="margin-top:20px;padding:16px;border:1px solid #dbe7ee;border-radius:14px;background:#f9fcfe"><strong>Belajar dari Excel AWLR</strong><p style="font-size:12px;color:#64798b;line-height:1.5">Prediksi hanya memakai selisih TMA AWLR kemarin pada jam pembanding yang sama selama 1 jam. Contoh: AWLR kemarin 18.25–19.25 naik 0,20 m, maka prediksi hari ini menambahkan 0,20 m ke TMA yang Anda input. Debit inflow–outflow hanya informasi pendukung arah, tidak mengubah nilai prediksi. Jika data kemarin tidak ada, sistem meminta upload AWLR kemarin.</p><input id="awlrFiles" type="file" accept=".xlsx,.xls" multiple style="font-size:13px;padding:10px;border:1px solid #cbdbe7;border-radius:10px;width:100%"><button type="button" id="uploadAwlr">Upload Data AWLR</button><div id="awlrStatus" style="margin-top:8px;font-size:12px;color:#476176" role="status"></div></section><section class="op-panel" id="opPanel" hidden>
 <h3>Pola Operasi Bendungan · 24 Jam WIB</h3>
 <div class="op-help">Atur Base / Peak, PWW, irigasi, dan outflow nominal per jam. Inflow = PWW + irigasi (m³/s). Angka contoh awal belum berlaku sampai Anda klik <b>Simpan pola operasi</b>. Setelah tersimpan, setiap perubahan akan disimpan otomatis ke akun Supabase.</div>
 <div class="op-alert" id="opNotice">Memuat pengaturan pola operasi...</div>
@@ -32,10 +32,10 @@ const form=document.getElementById('f'),input=document.getElementById('tma'),res
 const round2=n=>Number(Number(n).toFixed(2));
 const fmt=n=>round2(n).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtTrend=n=>Math.abs(n)<0.005?(n>0?'naik <0,01':n<0?'turun <0,01':'0,00'):(n>0?'+':'')+fmt(n);
-// Forecast Tolls ODGJ: AWLR 1 hari sebelumnya menjadi rujukan, fallback <= 7 hari.
+// Forecast Tolls ODGJ: HANYA selisih AWLR kemarin pada interval yang sama.
 // Tidak ada HOURLY_PATTERN/data tahunan sebagai fallback.
 const WIB_TZ='Asia/Jakarta';
-const HOUR_MS=3600000, DAY_MS=86400000, FIVE_MIN_MS=300000, MAX_LOOKBACK_DAYS=7;
+const HOUR_MS=3600000, DAY_MS=86400000, FIVE_MIN_MS=300000;
 const DEFAULT_HOURS=Array.from({length:24},(_,hour)=>({
   hour, mode:(hour===18||hour===19)?'peak':'base',
   pww:(hour===18||hour===19)?36.50:26.14,
@@ -112,86 +112,64 @@ function countHourReadings(arr,start,end){
   }
   return count;
 }
-// Satu pasangan AWLR 1 jam per hari. Tetap gunakan pembacaan asli,
-// pada waktu yang sama (dibulatkan KE ATAS ke kelipatan 5 menit).
-function historicalAwlrCandidates(arr,now){
-  const anchor=ceilFiveMinuteClock(now),candidates=[];
-  for(let daysBack=1;daysBack<=MAX_LOOKBACK_DAYS;daysBack++){
-    const start=anchor-daysBack*DAY_MS,end=start+HOUR_MS;
-    if(end>now)continue;
-    const first=near(arr,start,90*1000),last=near(arr,end,90*1000);
-    if(!first||!last)continue;
-    const readingCount=countHourReadings(arr,start,end);
-    if(readingCount<10)continue;
-    const delta=last.v-first.v;
-    if(!Number.isFinite(delta)||Math.abs(delta)>0.75)continue;
-    candidates.push({
-      anchor,daysBack,readingCount,delta,startTime:start,endTime:end,
-      referenceDate:wibParts(start).date,
-      firstTma:first.v,lastTma:last.v
-    });
-  }
-  return candidates;
+// Tepat SATU pasangan: AWLR satu hari sebelumnya pada jam + menit pembanding.
+// Tidak mengambil rata-rata banyak hari, tidak mencari hari lain, tidak mengganti arah.
+function yesterdayAwlrPair(arr,now){
+  const anchor=ceilFiveMinuteClock(now);
+  const start=anchor-DAY_MS,end=start+HOUR_MS;
+  const first=near(arr,start,90*1000),last=near(arr,end,90*1000);
+  if(!first||!last)return null;
+  const delta=last.v-first.v;
+  if(!Number.isFinite(delta))return null;
+  return {
+    anchor,daysBack:1,readingCount:countHourReadings(arr,start,end),delta,
+    startTime:start,endTime:end,referenceDate:wibParts(start).date,
+    firstTma:first.v,lastTma:last.v
+  };
 }
 
-// Pertama pakai AWLR kemarin. Bila arahnya bertentangan dengan neraca debit
-// yang tetap searah untuk SELURUH rentang outflow ±2, boleh mencari contoh
-// searah dari hari terdekat berikutnya (maksimal 7 hari), tanpa mengarang delta.
-function selectAwlrReference(candidates,reliableSign){
-  if(!candidates.length)return null;
-  const latest=candidates[0];
-  const direction=x=>x.delta>0.005?1:x.delta< -0.005?-1:0;
-  if(reliableSign===0 || direction(latest)===reliableSign){
-    return {ref:latest,reason:latest.daysBack===1?'kemarin':'hari lengkap terbaru',
-      switched:false,matchingCount:candidates.filter(x=>direction(x)===reliableSign).length};
-  }
-  const match=candidates.find(x=>direction(x)===reliableSign);
-  if(match){
-    return {ref:match,reason:'hari alternatif dengan arah AWLR sejalan neraca debit',
-      switched:true,matchingCount:candidates.filter(x=>direction(x)===reliableSign).length};
-  }
-  // Jangan menyulap debit menjadi sentimeter. Tanpa data AWLR yang searah,
-  // lebih aman menolak prediksi ketimbang menghasilkan arah yang bertentangan.
-  return {ref:null,reason:'tidak ada AWLR satu jam yang searah neraca debit',
-    switched:false,matchingCount:0,latest};
-}
 function classifyNet(net){return net>0.05?'naik':net< -0.05?'turun':'stabil / belum jelas';}
 function classifyDelta(delta){return delta>0.005?'naik':delta< -0.005?'turun':'mendekati stabil';}
 function operationalForecast(currentTma,now=Date.now()){
   if(!operationSaved)throw Error('Simpan pola operasi 24 jam terlebih dahulu. Template contoh belum aktif.');
   if(operationDirty)throw Error('Perubahan pola operasi belum tersimpan. Tunggu proses simpan selesai sebelum memprediksi.');
-  if(!awlrObservations.length)throw Error('Belum ada data AWLR. Upload Excel AWLR terlebih dahulu.');
+  if(!awlrObservations.length)throw Error('Belum ada data AWLR. Upload Excel AWLR kemarin terlebih dahulu.');
 
-  // Pola operasi yang sedang dijadwalkan adalah sinyal arah untuk satu jam depan.
-  // AWLR aktual pada jam yang sama dari hari sebelumnya memasok BESARNYA perubahan.
+  const ref=yesterdayAwlrPair(readings(),now);
+  if(!ref){
+    const anchor=ceilFiveMinuteClock(now)-DAY_MS;
+    const toClock=t=>new Intl.DateTimeFormat('id-ID',{timeZone:WIB_TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(t));
+    throw Error('Data AWLR kemarin ('+wibParts(anchor).date+') pada '+toClock(anchor)+'–'+toClock(anchor+HOUR_MS)+' WIB belum tersedia lengkap di awal/akhir interval. Upload Excel AWLR kemarin; sistem tidak mengambil data hari lain.');
+  }
+  // Angka prediksi = TMA input + selisih TMA AWLR kemarin (utuh, tanpa koreksi debit).
+  const delta=ref.delta;
+  // Inflow - outflow dihitung untuk mengecek ARAH saja, lengkap dengan transisi Base/Peak.
   const net=averageNet(now,HOUR_MS,0);
   const netLow=averageNet(now,HOUR_MS,2),netHigh=averageNet(now,HOUR_MS,-2);
-  const opDirection=classifyNet(net);
+  const opDirection=classifyNet(net),histDirection=classifyDelta(delta);
   const reliableSign=netLow>0.05?1:(netHigh< -0.05?-1:0);
-  const candidates=historicalAwlrCandidates(readings(),now);
-  if(!candidates.length)throw Error('Belum ada pasangan AWLR lengkap pada jam pembanding dalam 7 hari terakhir. Upload Excel AWLR lengkap; prediksi tidak dibuat tanpa data aktual.');
-  const selected=selectAwlrReference(candidates,reliableSign);
-  if(!selected.ref){
-    const desired=reliableSign>0?'naik':'turun';
-    throw Error('Belum ada pola AWLR '+desired+' pada jam yang sama dalam 7 hari terakhir, sementara neraca debit hari ini mengarah '+desired+'. Prediksi ditahan agar tidak menampilkan arah yang menyesatkan. Periksa jadwal Base/Peak, PWW, irigasi, outflow dan kelengkapan AWLR.');
+  const histSign=delta>0.005?1:(delta< -0.005?-1:0);
+  const notes=[];
+  if(reliableSign===0){
+    notes.push('Arah neraca debit belum pasti karena ketidakpastian outflow ±2 m³/s. Selisih AWLR kemarin tetap digunakan tanpa perubahan.');
+  }else if(histSign===0){
+    notes.push('AWLR kemarin hampir stabil; arah neraca debit hari ini '+opDirection+'. Nilai prediksi tetap mengikuti AWLR kemarin.');
+  }else if(reliableSign!==histSign){
+    notes.push('PERHATIAN: AWLR kemarin '+histDirection+', sedangkan neraca debit hari ini '+opDirection+'. Prediksi tetap mengikuti AWLR kemarin tanpa membalik arahnya.');
+  }else{
+    notes.push('Arah perubahan AWLR kemarin sejalan dengan neraca debit hari ini.');
   }
-  const ref=selected.ref,delta=ref.delta;
-  const histDirection=classifyDelta(delta),notes=[];
-  if(selected.switched)notes.push('AWLR '+candidates[0].referenceDate+' tidak searah dengan neraca debit hari ini; dipakai AWLR '+ref.referenceDate+' yang benar-benar tercatat '+histDirection+'. Ini pemilihan analog, bukan jaminan pola operasi historis sama.');
-  else if(ref.daysBack>1)notes.push('AWLR kemarin tidak lengkap pada jam ini; digunakan '+ref.referenceDate+' ('+ref.daysBack+' hari sebelumnya).');
-  if(reliableSign===0)notes.push('Rentang outflow nominal ±2 m³/s memungkinkan arah debit berbeda; AWLR hari terdekat tetap prioritas.');
-  if(Math.abs(delta)<0.005)notes.push('Perubahan AWLR referensi kurang dari 0,5 cm; hasil dapat tampil 0,00 m setelah pembulatan dua desimal.');
-  if(selected.matchingCount===1&&reliableSign!==0)notes.push('Hanya satu hari AWLR searah neraca debit; ketidakpastian prediksi tinggi.');
+  if(ref.readingCount<10)notes.push('Pembacaan AWLR dalam interval referensi hanya '+ref.readingCount+' dari 13 titik 5-menit; prediksi tetap dihitung dari pembacaan awal dan akhir.');
+  if(Math.abs(delta)<0.005)notes.push('Perubahan AWLR kemarin di bawah 0,5 cm; hasil mungkin tampak 0,00 m setelah pembulatan dua desimal.');
   const p0=wibParts(now),p1=wibParts(now+HOUR_MS);
   if(operationHours[p0.hour].mode!==operationHours[p1.hour].mode)
-    notes.push('Perubahan Base/Peak dihitung bertahap selama '+operationLag+' menit, mulai 5 menit sebelum batas jam.');
-  notes.push('AWLR tanggal lain bukan kepastian untuk hari ini. Model hanya alat bantu evaluasi, bukan dasar tunggal operasi bendungan.');
+    notes.push('Neraca debit mempertimbangkan jeda transisi Base/Peak '+operationLag+' menit.');
+  notes.push('Pola kemarin belum tentu berulang. Ini alat bantu prediksi, bukan dasar tunggal keputusan operasi bendungan.');
   return {
     delta,predicted:currentTma+delta,
     referenceDate:ref.referenceDate,referenceStart:ref.startTime,referenceEnd:ref.endTime,
-    referenceCount:ref.readingCount,referenceDaysBack:ref.daysBack,
+    referenceCount:ref.readingCount,referenceDaysBack:1,
     referenceFirstTma:ref.firstTma,referenceLastTma:ref.lastTma,
-    referenceReason:selected.reason,usedAlternative:selected.switched,candidateDays:candidates.length,
     net,netLow,netHigh,opDirection,histDirection,reliableSign,notes
   };
 }
@@ -216,8 +194,8 @@ form.addEventListener('submit',ev=>{
       el('delta').textContent=direction+fmt(Math.abs(deltaRounded))+' m ('+(deltaRounded*100).toLocaleString('id-ID',{minimumFractionDigits:0,maximumFractionDigits:0})+' cm)';
     }
     const fmtWibTime=t=>new Intl.DateTimeFormat('id-ID',{timeZone:WIB_TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(t));
-    el('caption').textContent='Acuan AWLR: '+f.referenceDate+' ('+f.referenceDaysBack+' hari sebelumnya), pukul '+fmtWibTime(f.referenceStart)+'–'+fmtWibTime(f.referenceEnd)+' WIB. '+f.referenceCount+' titik pembacaan 5-menit. Alasan: '+f.referenceReason+'.';
-    el('forecastDetails').textContent='TMA AWLR referensi: '+fmt(f.referenceFirstTma)+' → '+fmt(f.referenceLastTma)+' mdpl. Perubahan 1 jam: '+fmtTrend(f.delta)+' m ('+f.histDirection+'). Neraca debit nominal hari ini: '+(f.net>=0?'+':'')+fmt(f.net)+' m³/s ('+f.opDirection+'); rentang saat outflow ±2 m³/s: '+fmt(f.netLow)+' sampai '+fmt(f.netHigh)+' m³/s. Debit hanya pendukung, bukan sumber angka perubahan TMA.';
+    el('caption').textContent='AWLR kemarin: '+f.referenceDate+', pukul '+fmtWibTime(f.referenceStart)+'–'+fmtWibTime(f.referenceEnd)+' WIB ('+f.referenceCount+' dari 13 titik pembacaan).';
+    el('forecastDetails').textContent='TMA AWLR referensi: '+fmt(f.referenceFirstTma)+' → '+fmt(f.referenceLastTma)+' mdpl. Perubahan 1 jam: '+fmtTrend(f.delta)+' m ('+f.histDirection+'). Neraca debit nominal hari ini: '+(f.net>=0?'+':'')+fmt(f.net)+' m³/s ('+f.opDirection+'); rentang saat outflow ±2 m³/s: '+fmt(f.netLow)+' sampai '+fmt(f.netHigh)+' m³/s. Debit hanya mendukung pengecekan arah; prediksi memakai 100% selisih AWLR kemarin.';
     el('forecastWarnings').textContent=f.notes.join(' ');
     result.classList.add('show');
     saveCheck(currentRounded,predictedRounded,deltaRounded,f.referenceCount);
