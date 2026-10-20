@@ -43,7 +43,6 @@ let operationHours=DEFAULT_HOURS.map(x=>({...x}));
 let operationLag=18, operationSaved=false, operationDirty=false, operationTimer=null;
 let client=null, user=null, historyEntries=[], awlrObservations=[];
 const fNumber=x=>Number(String(x).replace(',','.'));
-const fmt3=n=>Number(n).toLocaleString('id-ID',{minimumFractionDigits:3,maximumFractionDigits:3});
 function wibParts(time){
   const parts=new Intl.DateTimeFormat('en-GB',{timeZone:WIB_TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(time));
   const p={};for(const x of parts)if(x.type!=='literal')p[x.type]=x.value;
@@ -183,14 +182,17 @@ form.addEventListener('submit',ev=>{
   if(!raw||!Number.isFinite(n)){err.textContent='Masukkan angka TMA yang valid.';err.classList.add('show');return;}
   try{
     const f=operationalForecast(n);
-    el('hasil').textContent=fmt3(f.predicted)+' mdpl';
-    const direction=f.delta>0?'Perkiraan naik +':f.delta<0?'Perkiraan turun ':'Perkiraan stabil ';
-    el('delta').textContent=direction+fmt3(Math.abs(f.delta))+' m ('+(f.delta*100).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})+' cm)';
+    // Kalkulasi internal tetap presisi penuh; tampilan dan riwayat konsisten 2 angka desimal.
+    const predictedRounded=Number(f.predicted.toFixed(2));
+    const deltaRounded=Number((predictedRounded-n).toFixed(2));
+    el('hasil').textContent=fmt(predictedRounded)+' mdpl';
+    const direction=deltaRounded>0?'Perkiraan naik +':deltaRounded<0?'Perkiraan turun ':'Perkiraan stabil ';
+    el('delta').textContent=direction+fmt(Math.abs(deltaRounded))+' m ('+(deltaRounded*100).toLocaleString('id-ID',{minimumFractionDigits:0,maximumFractionDigits:0})+' cm)';
     el('caption').textContent='Model: AWLR aktual hari-hari sebelumnya + pola operasi. '+f.historyCount+' pasangan 1 jam dipakai dari '+f.historyRawCount+' pasangan tersedia.';
-    el('forecastDetails').textContent='Rata-rata perubahan AWLR: '+(f.historyDelta>=0?'+':'')+fmt3(f.historyDelta)+' m/jam ('+f.histDirection+'). Neraca debit efektif: '+(f.net>=0?'+':'')+f.net.toFixed(2)+' m³/s ('+f.opDirection+'). Koreksi outflow terpilih: '+(f.outflowOffset>=0?'+':'')+f.outflowOffset.toFixed(2)+' m³/s dari nominal; rentang neraca jika outflow nominal ±2: '+f.netLow.toFixed(2)+' sampai '+f.netHigh.toFixed(2)+' m³/s. Bobot operasi pendukung: '+(f.operationWeight*100).toFixed(0)+'%.';
+    el('forecastDetails').textContent='Rata-rata perubahan AWLR: '+(f.historyDelta>=0?'+':'')+fmt(f.historyDelta)+' m/jam ('+f.histDirection+'). Neraca debit efektif: '+(f.net>=0?'+':'')+f.net.toFixed(2)+' m³/s ('+f.opDirection+'). Koreksi outflow terpilih: '+(f.outflowOffset>=0?'+':'')+f.outflowOffset.toFixed(2)+' m³/s dari nominal; rentang neraca jika outflow nominal ±2: '+f.netLow.toFixed(2)+' sampai '+f.netHigh.toFixed(2)+' m³/s. Bobot operasi pendukung: '+(f.operationWeight*100).toFixed(0)+'%.';
     el('forecastWarnings').textContent=f.notes.join(' ');
     result.classList.add('show');
-    saveCheck(n,f.predicted,f.delta,f.historyCount);
+    saveCheck(Number(n.toFixed(2)),predictedRounded,deltaRounded,f.historyCount);
   }catch(e){err.textContent=e.message;err.classList.add('show');}
 });
 
