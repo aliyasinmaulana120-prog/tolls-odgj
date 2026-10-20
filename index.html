@@ -233,26 +233,34 @@ async function loadAwlr() {
     ' pembacaan AWLR tersimpan dan siap dijadikan referensi.';
 }
 
- function excelDateString(val,baseDay){
- let d=null;
- if(val instanceof Date)d=val;
- else if(typeof val==='number' && val>10000){const c=XLSX.SSF.parse_date_code(val);if(c)d=new Date(Date.UTC(c.y,c.m-1,c.d,c.H,c.M,c.S));}
- else if(typeof val==='string'){
- const m=val.trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
- if(m&&baseDay)d=new Date(baseDay+'T'+m[1].padStart(2,'0')+':'+m[2]+':'+(m[3]||'00')+'+07:00');
-  else if(/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(val)){
-    const s=val.trim().replace(' ','T');
-    d=new Date(/[zZ]$|[+-]\d{2}:?\d{2}$/.test(s)?s:s+'+07:00');
+// Pembacaan Excel selalu diperlakukan sebagai jam DINDING WIB, bukan zona waktu browser.
+// Gunakan cellDates:false supaya SheetJS mengembalikan serial Excel mentah (mis. 46314.788333...)
+// dan hasil impor konsisten untuk pengguna di zona waktu apa pun.
+function excelDateString(val,baseDay){
+  let d=null;
+  if(typeof val==='number'&&Number.isFinite(val)&&val>10000){
+    const c=XLSX.SSF.parse_date_code(val);
+    if(c)d=new Date(Date.UTC(c.y,c.m-1,c.d,c.H,c.M,Math.round(c.S||0))-7*HOUR_MS);
+  }else if(typeof val==='number'&&Number.isFinite(val)&&val>=0&&val<1&&baseDay){
+    const midnight=Date.parse(baseDay+'T00:00:00+07:00');
+    d=new Date(midnight+Math.round(val*DAY_MS));
+  }else if(val instanceof Date){
+    // Cadangan untuk input bertipe Date; gunakan komponen UTC sebagai waktu dinding WIB.
+    d=new Date(Date.UTC(val.getUTCFullYear(),val.getUTCMonth(),val.getUTCDate(),
+      val.getUTCHours(),val.getUTCMinutes(),val.getUTCSeconds())-7*HOUR_MS);
+  }else if(typeof val==='string'){
+    const s=val.trim();
+    const m=s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+    if(m&&baseDay)d=new Date(baseDay+'T'+m[1].padStart(2,'0')+':'+m[2]+':'+(m[3]||'00')+'+07:00');
+    else if(/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(s)){
+      const iso=s.replace(' ','T');
+      d=new Date(/[zZ]$|[+-]\d{2}:?\d{2}$/.test(iso)?iso:iso+'+07:00');
+    }else if(/^\d{4}-\d{2}-\d{2}$/.test(s))d=new Date(s+'T00:00:00+07:00');
   }
-  else if(/^\d{4}-\d{2}-\d{2}$/.test(val.trim()))d=new Date(val.trim()+'T00:00:00+07:00');
- }
- if(!d||!Number.isFinite(d.getTime()))return null;
- // Excel full datetime parsed as wall-clock WIB; convert from naive UTC to WIB
- if((val instanceof Date)||(typeof val==='number'&&val>10000))return new Date(d.getTime()-7*3600000).toISOString();
- return d.toISOString();
+  return d&&Number.isFinite(d.getTime())?d.toISOString():null;
 }
 function parseAwlrFile(buffer,name){
- const wb=XLSX.read(buffer,{type:'array',cellDates:true});const match=name.match(/(20\d{2}-\d{2}-\d{2})/);const baseDay=match?.[1];if(!baseDay)throw Error('Nama Excel harus mencantumkan tanggal YYYY-MM-DD: '+name);
+ const wb=XLSX.read(buffer,{type:'array',cellDates:false});const match=name.match(/(20\d{2}-\d{2}-\d{2})/);const baseDay=match?.[1];if(!baseDay)throw Error('Nama Excel harus mencantumkan tanggal YYYY-MM-DD: '+name);
  const output=[];
  for(const sheet of wb.SheetNames){const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1,raw:true,defval:null});
  const hi=rows.findIndex(r=>r.some(c=>typeof c==='string'&&c.trim().toLowerCase()==='waktu')&&r.some(c=>typeof c==='string'&&c.toLowerCase().includes('rerata tinggi muka air')));
@@ -276,7 +284,12 @@ function parseAwlrFile(buffer,name){
  try{const merged=new Map();for(const f of files){el('awlrStatus').textContent='Membaca '+f.name+'...';for(const r of parseAwlrFile(await f.arrayBuffer(),f.name))merged.set(r.observed_at,r)}
  const rows=[...merged.values()].map(r=>({...r,user_id:user.id}));let saved=0;
  for(let i=0;i<rows.length;i+=200){const {error}=await client.from('awlr_observations').upsert(rows.slice(i,i+200),{onConflict:'user_id,observed_at'});if(error)throw error;saved+=Math.min(200,rows.length-i);el('awlrStatus').textContent='Menyimpan '+saved+' / '+rows.length+' data...';}
- await loadAwlr();el('awlrStatus').textContent='Berhasil: '+saved+' data diproses. '+awlrObservations.length+' pengukuran unik tersimpan di Supabase.';
+ await loadAwlr();
+ const ref=yesterdayAwlrPair(readings(),Date.now());
+ const statusPair=ref
+   ? ' Pasangan AWLR kemarin ditemukan: '+fmt(ref.firstTma)+' ke '+fmt(ref.lastTma)+' mdpl.'
+   : ' Pasangan AWLR kemarin pada jam pembanding belum ditemukan; periksa waktu pada data yang tersimpan.';
+ el('awlrStatus').textContent='Berhasil: '+saved+' data diproses. '+awlrObservations.length+' pengukuran unik tersimpan di Supabase.'+statusPair;
  }catch(e){el('awlrStatus').textContent='Upload gagal: '+e.message;}finally{btn.disabled=false}
 });
 // Editor pola operasi. Tombol Simpan diperlukan satu kali; edit berikutnya autosave.
