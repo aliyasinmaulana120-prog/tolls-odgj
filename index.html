@@ -130,6 +130,8 @@ function yesterdayAwlrPair(arr,now){
 // Baca perubahan pada JAM dan menit yang sama dari hari-hari sebelumnya.
 // Data kemarin dikecualikan agar tidak dihitung dua kali karena sudah menjadi acuan utama.
 function historicalHourlyDeltas(arr,now,excludeDate=null){
+  // Bandingkan interval jam target pada hari-hari sebelum kemarin.
+  // Toleransi 150 detik mengakomodasi timestamp AWLR yang berakhiran detik seperti :12.
   const anchor=ceilFiveMinuteClock(now),ap=wibParts(anchor),today=wibParts(now).date;
   const dates=[...new Set(arr
     .filter(r=>{const d=wibParts(r.t).date;return d<today&&d!==excludeDate&&r.t<now&&r.t>=now-30*DAY_MS;})
@@ -137,9 +139,10 @@ function historicalHourlyDeltas(arr,now,excludeDate=null){
   const samples=[];
   for(const date of dates){
     const start=wibTimestamp(date,ap.hour,ap.minute),end=start+HOUR_MS;
-    if(end>now)continue;
-    const a=near(arr,start,90*1000),b=near(arr,end,90*1000);
+    const a=near(arr,start,150*1000),b=near(arr,end,150*1000);
     if(!a||!b)continue;
+    if(Math.abs(a.t-start)>150*1000||Math.abs(b.t-end)>150*1000)continue;
+    if(Math.abs((b.t-a.t)-HOUR_MS)>180*1000)continue;
     const delta=b.v-a.v,age=(now-start)/DAY_MS;
     if(!Number.isFinite(delta)||Math.abs(delta)>0.75)continue;
     samples.push({t:a.t,delta,age,date,startTma:a.v,endTma:b.v});
@@ -148,6 +151,32 @@ function historicalHourlyDeltas(arr,now,excludeDate=null){
   const chosen=(recent.length>=3?recent:samples).filter(x=>x.age<=30);
   return {samples:chosen,available:samples.length,recentCount:recent.length,usedRecent:recent.length>=3,anchor};
 }
+
+// Membaca arah per jam sebelum interval target pada data AWLR kemarin.
+// hoursBack=1 berarti satu jam sebelum interval target; ini sinyal tren, bukan dijumlahkan mentah.
+function precedingHourlyDeltas(arr,referenceStart,maxHours=3){
+  const samples=[];
+  for(let hoursBack=1;hoursBack<=maxHours;hoursBack++){
+    const start=referenceStart-hoursBack*HOUR_MS,end=start+HOUR_MS;
+    const a=near(arr,start,150*1000),b=near(arr,end,150*1000);
+    if(!a||!b)continue;
+    if(Math.abs(a.t-start)>150*1000||Math.abs(b.t-end)>150*1000)continue;
+    if(Math.abs((b.t-a.t)-HOUR_MS)>180*1000)continue;
+    const delta=b.v-a.v;
+    if(!Number.isFinite(delta)||Math.abs(delta)>0.75)continue;
+    samples.push({start,end,delta,hoursBack,date:wibParts(start).date,startTma:a.v,endTma:b.v});
+  }
+  return samples.sort((a,b)=>a.hoursBack-b.hoursBack);
+}
+function summarizePrecedingHourlyDeltas(samples){
+  if(samples.length<2)return null;
+  const weighted=samples.map(x=>({...x,weight:Math.exp(-(x.hoursBack-1)/1.5)}));
+  const sw=weighted.reduce((s,x)=>s+x.weight,0);
+  const mean=weighted.reduce((s,x)=>s+x.delta*x.weight,0)/sw;
+  const med=medianNums(weighted.map(x=>x.delta));
+  return {delta:0.7*mean+0.3*med,mean,median:med,count:weighted.length};
+}
+
 function summarizeHourlyHistory(samples){
   if(!samples.length)return null;
   const center=medianNums(samples.map(x=>x.delta));
@@ -225,31 +254,41 @@ function operationalForecast(currentTma,now=Date.now()){
     throw Error('Data AWLR kemarin ('+wibParts(anchor).date+') pada '+toClock(anchor)+'–'+toClock(anchor+HOUR_MS)+' WIB belum tersedia lengkap di awal/akhir interval. Upload Excel AWLR kemarin; sistem tidak mengambil data hari lain.');
   }
 
-  // 1) AWLR kemarin adalah acuan utama.
+  // 1) AWLR kemarin pada interval target tetap menjadi acuan utama.
   const awlrDelta=ref.delta;
-  // 2) Pola jam yang sama dari hari-hari sebelumnya menjadi pendukung.
+
+  // 2) Arah beberapa jam sebelum interval target (dari data AWLR kemarin).
+  const precedingHistory=precedingHourlyDeltas(arr,ref.startTime,3);
+  const precedingSummary=summarizePrecedingHourlyDeltas(precedingHistory);
+
+  // 3) Pola interval jam target dari hari-hari lebih lama sebagai pendukung tambahan.
   const hourlyHistory=historicalHourlyDeltas(arr,now,ref.referenceDate);
   const hourlySummary=summarizeHourlyHistory(hourlyHistory.samples);
-  let historyWeight=0,baseDelta=awlrDelta;
-  if(hourlySummary&&hourlySummary.count>=3){
-    historyWeight=hourlySummary.count>=5?0.30:0.20;
-    baseDelta=(1-historyWeight)*awlrDelta+historyWeight*hourlySummary.delta;
-  }
+  let historyWeight=0,precedingWeight=0;
+  if(hourlySummary&&hourlySummary.count>=3)
+    historyWeight=hourlySummary.count>=5?0.25:0.15;
+  if(precedingSummary&&precedingSummary.count>=2)
+    precedingWeight=precedingSummary.count>=3?0.15:0.10;
+  // AWLR kemarin selalu menjadi bobot terbesar (minimal 60%).
+  const awlrWeight=Math.max(0,1-historyWeight-precedingWeight);
+  const baseDelta=awlrWeight*awlrDelta
+    +historyWeight*(hourlySummary?hourlySummary.delta:0)
+    +precedingWeight*(precedingSummary?precedingSummary.delta:0);
 
-  // 3) Pola operasi saat ini memberi koreksi arah/bobot eksperimental.
+  // 4) Pola operasi hanya sinyal pendukung; jangan buang arah AWLR/history.
   const net=averageNet(now,HOUR_MS,0);
   const netLow=averageNet(now,HOUR_MS,2),netHigh=averageNet(now,HOUR_MS,-2);
   const opDirection=classifyNet(net),histDirection=classifyDelta(awlrDelta);
   const reliableSign=netLow>0.05?1:(netHigh< -0.05?-1:0);
   const baseSign=baseDelta>0.005?1:(baseDelta< -0.005?-1:0);
   let operationWeight=0,operationDelta=baseDelta,operationApplied=false;
-  if(reliableSign!==0){
+  if(reliableSign!==0&&Math.abs(baseDelta)>=0.005){
     const absNet=Math.abs(net);
-    operationWeight=absNet>0?Math.max(0,Math.min(1,(absNet-2)/(absNet+2))):0;
-    if(Math.abs(baseDelta)>=0.005){
-      operationDelta=reliableSign*Math.abs(baseDelta)*operationWeight;
-      operationApplied=true;
-    }
+    const rawWeight=absNet>0?Math.max(0,Math.min(1,(absNet-2)/(absNet+2))):0;
+    operationWeight=rawWeight*0.35; // maksimum 35% pengaruh arah operasi
+    operationDelta=baseDelta*(1-operationWeight)
+      +reliableSign*Math.abs(baseDelta)*operationWeight;
+    operationApplied=operationWeight>0;
   }
 
   // 4) Koreksi dari kesalahan prediksi terdahulu yang sudah dipasangkan dengan AWLR aktual.
@@ -258,19 +297,27 @@ function operationalForecast(currentTma,now=Date.now()){
   if(Math.abs(delta)<0.0005)delta=0;
 
   const notes=[];
-  if(hourlySummary&&hourlySummary.count>=3){
-    notes.push('Pola jam yang sama dari '+hourlySummary.count+' interval sebelumnya menunjukkan '+classifyDelta(hourlySummary.delta)+' ('+fmtTrend(hourlySummary.delta)+' m/jam); bobot pendukung '+(historyWeight*100).toFixed(0)+'%. AWLR kemarin tetap acuan utama.');
+  if(precedingHistory.length){
+    notes.push('Riwayat AWLR sebelum interval target (data kemarin): '+precedingHistory.map(x=>x.hoursBack+' jam sebelumnya '+classifyDelta(x.delta)+' '+fmtTrend(x.delta)+' m').join('; ')+'.');
   }else{
-    notes.push('Pola jam historis belum memiliki minimal 3 interval lengkap; sistem tetap mengutamakan AWLR kemarin.');
+    notes.push('Interval AWLR beberapa jam sebelum target kemarin belum lengkap; sinyal tren beruntun tidak digunakan.');
+  }
+  if(precedingSummary&&precedingSummary.count>=2){
+    notes.push('Ringkasan arah beberapa jam sebelumnya: '+classifyDelta(precedingSummary.delta)+' '+fmtTrend(precedingSummary.delta)+' m/jam; bobot '+(precedingWeight*100).toFixed(0)+'%.');
+  }
+  if(hourlySummary&&hourlySummary.count>=3){
+    notes.push('Pola interval jam target dari '+hourlySummary.count+' hari lebih lama menunjukkan '+classifyDelta(hourlySummary.delta)+' ('+fmtTrend(hourlySummary.delta)+' m/jam); bobot '+(historyWeight*100).toFixed(0)+'%.');
+  }else{
+    notes.push('Pola interval jam target dari hari-hari lebih lama belum memiliki minimal 3 pasangan lengkap; AWLR kemarin dan jam-jam sebelumnya tetap diprioritaskan.');
   }
   if(reliableSign===0){
     notes.push('Neraca debit belum cukup pasti setelah ketidakpastian outflow ±2 m³/s. Pola operasi tidak mengubah arah pada prediksi ini.');
   }else if(Math.abs(baseDelta)<0.005){
     notes.push('Perubahan dasar terlalu kecil untuk mengukur koreksi operasi; sistem tidak mengarang perubahan TMA.');
   }else if(reliableSign!==baseSign){
-    notes.push('Arah pola operasi ('+opDirection+') berbeda dari arah AWLR/historis. Koreksi operasi mengikuti arah debit dengan bobot '+(operationWeight*100).toFixed(0)+'%.');
+    notes.push('Arah pola operasi ('+opDirection+') berbeda dengan AWLR/history. Pola operasi hanya dicampurkan sebagai sinyal pendukung '+(operationWeight*100).toFixed(0)+'%; arah history tidak langsung dibuang.');
   }else{
-    notes.push('Arah pola operasi sejalan dengan kecenderungan AWLR/historis; bobot operasi '+(operationWeight*100).toFixed(0)+'% digunakan.');
+    notes.push('Arah pola operasi sejalan dengan AWLR/history; bobot pendukung operasi '+(operationWeight*100).toFixed(0)+'% digunakan pada perubahan dasar.');
   }
   if(learning.active){
     notes.push('Pembelajaran error aktif: koreksi '+fmtTrend(learning.correction)+' m dari '+learning.usedCount+' pasangan prediksi–aktual ('+learning.source+'). MAE 14 hari terakhir '+(learning.mae*100).toFixed(1)+' cm.');
@@ -285,6 +332,7 @@ function operationalForecast(currentTma,now=Date.now()){
 
   return {
     delta,predicted:currentTma+delta,awlrDelta,baseDelta,operationDelta,historyWeight,hourlySummary,
+    precedingHistory,precedingSummary,precedingWeight,awlrWeight,
     operationWeight,operationApplied,learning,
     referenceDate:ref.referenceDate,referenceStart:ref.startTime,referenceEnd:ref.endTime,
     referenceCount:ref.readingCount,referenceDaysBack:1,
@@ -314,7 +362,7 @@ form.addEventListener('submit',ev=>{
     }
     const fmtWibTime=t=>new Intl.DateTimeFormat('id-ID',{timeZone:WIB_TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(t));
     el('caption').textContent='AWLR kemarin: '+f.referenceDate+', pukul '+fmtWibTime(f.referenceStart)+'–'+fmtWibTime(f.referenceEnd)+' WIB ('+f.referenceCount+' dari 13 titik). Pola historis + pembelajaran error dipakai jika data cukup.';
-    el('forecastDetails').textContent='AWLR kemarin: '+fmt(f.referenceFirstTma)+' → '+fmt(f.referenceLastTma)+' mdpl; perubahan '+fmtTrend(f.awlrDelta)+' m. Pola jam historis: '+(f.hourlySummary&&f.hourlySummary.count>=3?fmtTrend(f.hourlySummary.delta)+' m dari '+f.hourlySummary.count+' interval, bobot '+(f.historyWeight*100).toFixed(0)+'%':'belum cukup data')+'. Perubahan setelah pola operasi: '+fmtTrend(f.operationDelta)+' m. Koreksi belajar dari hasil aktual: '+fmtTrend(f.learning.correction)+' m ('+f.learning.usedCount+' pasangan digunakan; '+f.learning.recentCount+' cocok dalam 14 hari). MAE aktual: '+(f.learning.mae===null?'belum tersedia':(f.learning.mae*100).toFixed(1)+' cm')+'. Netto debit: '+(f.net>=0?'+':'')+fmt(f.net)+' m³/s ('+f.opDirection+'); rentang dengan outflow ±2: '+fmt(f.netLow)+' sampai '+fmt(f.netHigh)+' m³/s. Perubahan akhir: '+fmtTrend(f.delta)+' m; prediksi = TMA sekarang + perubahan akhir.';
+    const priorHoursText=f.precedingHistory.length?f.precedingHistory.map(x=>x.hoursBack+' jam sebelumnya '+classifyDelta(x.delta)+' ('+fmtTrend(x.delta)+' m)').join('; '):'data interval belum lengkap';el('forecastDetails').textContent='AWLR kemarin: '+fmt(f.referenceFirstTma)+' → '+fmt(f.referenceLastTma)+' mdpl; perubahan target '+fmtTrend(f.awlrDelta)+' m. Arah jam-jam sebelumnya: '+priorHoursText+'. Ringkasan tren sebelumnya: '+(f.precedingSummary?fmtTrend(f.precedingSummary.delta)+' m/jam, bobot '+(f.precedingWeight*100).toFixed(0)+'%':'belum cukup data')+'. Pola jam target dari hari lebih lama: '+(f.hourlySummary&&f.hourlySummary.count>=3?fmtTrend(f.hourlySummary.delta)+' m dari '+f.hourlySummary.count+' interval, bobot '+(f.historyWeight*100).toFixed(0)+'%':'belum cukup data')+'. Bobot AWLR kemarin '+(f.awlrWeight*100).toFixed(0)+'%. Perubahan setelah pola operasi: '+fmtTrend(f.operationDelta)+' m. Koreksi belajar dari hasil aktual: '+fmtTrend(f.learning.correction)+' m ('+f.learning.usedCount+' pasangan digunakan; '+f.learning.recentCount+' cocok dalam 14 hari). MAE aktual: '+(f.learning.mae===null?'belum tersedia':(f.learning.mae*100).toFixed(1)+' cm')+'. Netto debit: '+(f.net>=0?'+':'')+fmt(f.net)+' m³/s ('+f.opDirection+'); rentang dengan outflow ±2: '+fmt(f.netLow)+' sampai '+fmt(f.netHigh)+' m³/s. Perubahan akhir: '+fmtTrend(f.delta)+' m; prediksi = TMA sekarang + perubahan akhir.';
     el('forecastWarnings').textContent=f.notes.join(' ');
     result.classList.add('show');
     saveCheck(currentRounded,predictedRounded,deltaRounded,f.referenceCount);
