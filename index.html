@@ -31,7 +31,7 @@
 .actual-time{font-size:11px;color:#647c90;line-height:1.55;margin-top:5px}
 .actual-time.warn{color:#955d19}
 @media(max-width:450px){.history-row{flex-wrap:wrap}.delete-one{margin-left:auto}}
-</style></head><body><main class="wrap"><div class="head"><img src="logo-odgj.png" class="logoimg" alt="Logo ODGJ"><div><strong>Tolls ODGJ</strong><div class="muted">AWLR + Pola Operasi · 1 jam ke depan</div></div></div><section class="card"><div class="auth" id="authPanel"><div class="eyebrow">Akun pribadi</div><div class="auth-fields" id="loginFields"><label for="email">Email</label><input autocomplete="email" id="email" placeholder="email@contoh.com" type="email"/><label for="password">Password</label><input autocomplete="current-password" id="password" placeholder="Minimal 6 karakter" type="password"/><button id="loginBtn" type="button">Masuk</button><button class="secondary" id="registerBtn" type="button">Daftar akun</button></div><div hidden="" id="accountPanel"><p id="accountEmail"></p><button class="secondary" id="logoutBtn" type="button">Keluar akun</button></div><div aria-live="polite" class="auth-message" id="authMessage"></div></div><form hidden="" id="f"><label for="tma">TMA</label><div class="inp"><input aria-describedby="petunjuk" autocomplete="off" autofocus="" id="tma" inputmode="decimal" placeholder="Contoh: 66,50" required="" type="text"/><span class="unit">mdpl</span></div><div class="hint" id="petunjuk">Masukkan angka lalu tekan <b>Enter</b>.</div><button type="submit">Prediksi 1 Jam Berikutnya →</button></form><div class="error" id="err" role="alert"></div><section aria-live="polite" class="result" id="result"><div class="eyebrow">Perkiraan TMA +1 jam</div><div class="val" id="hasil"></div><span class="pill" id="delta"></span><div class="line"></div><small id="caption"></small><div class="meta" id="forecastDetails" style="margin-top:9px"></div><div class="note-warning" id="forecastWarnings"></div></section><section class="awlr-upload" id="awlrPanel" hidden style="margin-top:20px;padding:16px;border:1px solid #dbe7ee;border-radius:14px;background:#f9fcfe"><strong>Belajar dari Excel AWLR</strong><p style="font-size:12px;color:#64798b;line-height:1.5">Prediksi hanya memakai selisih TMA AWLR kemarin pada jam pembanding yang sama selama 1 jam. Contoh: AWLR kemarin 18.25–19.25 naik 0,20 m, maka prediksi hari ini menambahkan 0,20 m ke TMA yang Anda input. Neraca debit dari PWW + irigasi − outflow ikut memperkuat atau melemahkan besarnya perubahan AWLR kemarin (uji coba, maksimal 25%). Ketidakpastian outflow ±2 m³/s dipakai untuk menilai kekuatan sinyal, bukan ditambahkan langsung ke TMA. Setelah AWLR aktual pada jam target tersedia, sistem mempelajari apakah prediksi sebelumnya lebih sering terlalu rendah atau terlalu tinggi. Koreksi belajar tidak mengubah sumber AWLR dan tidak mencampur selisih AWLR dari banyak hari. Jika data kemarin belum tersedia, sistem meminta upload AWLR kemarin.</p><input id="awlrFiles" type="file" accept=".xlsx,.xls" multiple style="font-size:13px;padding:10px;border:1px solid #cbdbe7;border-radius:10px;width:100%"><button type="button" id="uploadAwlr">Upload Data AWLR</button><div id="awlrStatus" style="margin-top:8px;font-size:12px;color:#476176" role="status"></div></section><section class="op-panel" id="opPanel" hidden>
+</style></head><body><main class="wrap"><div class="head"><img src="logo-odgj.png" class="logoimg" alt="Logo ODGJ"><div><strong>Tolls ODGJ</strong><div class="muted">AWLR + Pola Operasi · 1 jam ke depan</div></div></div><section class="card"><div class="auth" id="authPanel"><div class="eyebrow">Akun pribadi</div><div class="auth-fields" id="loginFields"><label for="email">Email</label><input autocomplete="email" id="email" placeholder="email@contoh.com" type="email"/><label for="password">Password</label><input autocomplete="current-password" id="password" placeholder="Minimal 6 karakter" type="password"/><button id="loginBtn" type="button">Masuk</button><button class="secondary" id="registerBtn" type="button">Daftar akun</button></div><div hidden="" id="accountPanel"><p id="accountEmail"></p><button class="secondary" id="logoutBtn" type="button">Keluar akun</button></div><div aria-live="polite" class="auth-message" id="authMessage"></div></div><form hidden="" id="f"><label for="tma">TMA</label><div class="inp"><input aria-describedby="petunjuk" autocomplete="off" autofocus="" id="tma" inputmode="decimal" placeholder="Contoh: 66,50" required="" type="text"/><span class="unit">mdpl</span></div><div class="hint" id="petunjuk">Masukkan angka lalu tekan <b>Enter</b>.</div><button type="submit">Prediksi 1 Jam Berikutnya →</button></form><div class="error" id="err" role="alert"></div><section aria-live="polite" class="result" id="result"><div class="eyebrow">Perkiraan TMA +1 jam</div><div class="val" id="hasil"></div><span class="pill" id="delta"></span><div class="line"></div><small id="caption"></small><div class="meta" id="forecastDetails" style="margin-top:9px"></div><div class="note-warning" id="forecastWarnings"></div></section><section class="awlr-upload" id="awlrPanel" hidden style="margin-top:20px;padding:16px;border:1px solid #dbe7ee;border-radius:14px;background:#f9fcfe"><strong>Belajar dari Excel AWLR</strong><p style="font-size:12px;color:#64798b;line-height:1.5">Prediksi hanya memakai selisih TMA AWLR kemarin pada jam pembanding yang sama selama 1 jam. Contoh: AWLR kemarin 18.25–19.25 naik 0,20 m, maka prediksi hari ini menambahkan 0,20 m ke TMA yang Anda input. Neraca debit dari PWW + irigasi − outflow ikut memperkuat atau melemahkan besarnya perubahan AWLR kemarin (uji coba, maksimal 25%). Ketidakpastian outflow ±2 m³/s dipakai untuk menilai kekuatan sinyal, bukan ditambahkan langsung ke TMA. Setelah waktu target tercapai dan TMA aktual Anda isi pada riwayat, sistem menimbang arah serta besarnya kesalahan prediksi sebelumnya. Satu hasil hanya diberi bobot kecil; jika AWLR, debit, dan evaluasi aktual searah, bobot koreksi belajar sedikit diperkuat. Koreksi belajar tidak mengubah sumber AWLR dan tidak mencampur selisih AWLR dari banyak hari. Jika data kemarin belum tersedia, sistem meminta upload AWLR kemarin.</p><input id="awlrFiles" type="file" accept=".xlsx,.xls" multiple style="font-size:13px;padding:10px;border:1px solid #cbdbe7;border-radius:10px;width:100%"><button type="button" id="uploadAwlr">Upload Data AWLR</button><div id="awlrStatus" style="margin-top:8px;font-size:12px;color:#476176" role="status"></div></section><section class="op-panel" id="opPanel" hidden>
 <h3>Pola Operasi Bendungan · 24 Jam WIB</h3>
 <div class="op-help">Atur Base / Peak, PWW, irigasi, dan outflow nominal per jam. Inflow = PWW + irigasi (m³/s). Angka contoh awal belum berlaku sampai Anda klik <b>Simpan pola operasi</b>. Setelah tersimpan, setiap perubahan akan disimpan otomatis ke akun Supabase.</div>
 <div class="op-alert" id="opNotice">Memuat pengaturan pola operasi...</div>
@@ -173,38 +173,54 @@ function learnPredictionCorrection(arr,checks,now){
   const today=wibParts(now).date;
   const todaySamples=all.filter(x=>wibParts(x.target).date===today);
   const sameHour=all.filter(x=>wibParts(x.target).hour===targetHour);
-  let use=[],scope='belum cukup data';
-  if(todaySamples.length>=3){use=todaySamples;scope='hasil hari ini';}
-  else if(sameHour.length>=3){use=sameHour;scope='jam target yang sama';}
-  else if(all.length>=5){use=all;scope='gabungan jam 14 hari';}
   const countDirections=xs=>({
     up:xs.filter(x=>x.error>=0.005).length,
     down:xs.filter(x=>x.error<=-0.005).length,
     stable:xs.filter(x=>Math.abs(x.error)<0.005).length
   });
-  const counts=countDirections(use);
-  const todayCounts=countDirections(todaySamples);
-  const nInfo=counts.up+counts.down;
-  let correction=0,active=false,direction='belum jelas',majorityRatio=0;
-  if(use.length>=3&&nInfo>=3){
-    const leadUp=counts.up>counts.down,leadDown=counts.down>counts.up;
-    const leadCount=Math.max(counts.up,counts.down);
-    majorityRatio=leadCount/nInfo;
-    if((leadUp||leadDown)&&majorityRatio>=0.60){
-      direction=leadUp?'prediksi sering terlalu rendah':'prediksi sering terlalu tinggi';
-      const sign=leadUp?1:-1;
-      const sameSign=use.filter(x=>Math.sign(x.error)===sign&&Math.abs(x.error)>=0.005);
-      const magnitudes=sameSign.map(x=>Math.min(0.15,Math.abs(x.error)));
-      const typical=medianNums(magnitudes);
-      const confidence=use.length/(use.length+3);
-      const strength=scope==='hasil hari ini'?0.65:scope==='jam target yang sama'?0.65:0.45;
-      correction=sign*Math.min(0.03,typical*confidence*strength*majorityRatio);
-      active=true;
-    }else direction='error naik dan turun masih berimbang';
-  }
+
+  // Lebih utamakan evaluasi hari ini jika sudah ada 2 atau lebih.
+  // Bila baru satu, cari evaluasi jam yang serupa; jika tidak ada, satu evaluasi
+  // tetap boleh belajar dengan bobot sangat kecil dan batas koreksi 1 cm.
+  let use=[],scope='belum ada evaluasi aktual';
+  if(todaySamples.length>=2){use=todaySamples;scope='hasil hari ini';}
+  else if(sameHour.length>=3){use=sameHour;scope='jam target yang sama';}
+  else if(all.length>=3){use=all;scope='gabungan 14 hari';}
+  else if(todaySamples.length){use=todaySamples;scope='sementara: satu hasil hari ini';}
+  else if(all.length){use=all;scope='sementara: evaluasi terbatas';}
+
+  const counts=countDirections(use),todayCounts=countDirections(todaySamples);
+  const info=counts.up+counts.down,leadCount=Math.max(counts.up,counts.down);
+  const majorityRatio=info?leadCount/info:0;
+  const sign=counts.up>counts.down?1:(counts.down>counts.up?-1:0);
+  let correction=0,active=false,weight=0,direction='belum ada kecenderungan',
+    limit=use.length===1?0.01:use.length===2?0.015:0.03;
+
+  if(sign!==0&&info>0&&majorityRatio>=0.60){
+    direction=sign>0?'prediksi cenderung terlalu rendah':'prediksi cenderung terlalu tinggi';
+    // Kesalahan ekstrem tidak langsung menjadi koreksi penuh.
+    // Pemotongan 12 cm, recency weight, dan penyusutan bobot berdasarkan sampel.
+    const weighted=use.map(x=>({
+      error:Math.max(-0.12,Math.min(0.12,x.error)),
+      weight:Math.exp(-x.ageDays/4)
+    }));
+    const sw=weighted.reduce((s,x)=>s+x.weight,0);
+    const avg=weighted.reduce((s,x)=>s+x.error*x.weight,0)/sw;
+    const median=medianNums(weighted.map(x=>x.error));
+    const bias=0.7*avg+0.3*median;
+    const scopeFactor=scope.includes('hari ini')?1:
+      scope.includes('jam target')?0.9:scope.includes('terbatas')?0.60:0.70;
+    weight=(use.length/(use.length+4))*majorityRatio*scopeFactor;
+    // Koreksi tidak boleh membalik arah mayoritas akibat sampel minoritas yang ekstrem.
+    correction= Math.sign(bias)===sign
+      ? Math.max(-limit,Math.min(limit,bias*weight)):0;
+    active=Math.abs(correction)>=0.0005;
+  }else if(info>0)direction='error naik dan turun masih berimbang';
+
   const mae=all.length?all.reduce((sum,x)=>sum+Math.abs(x.error),0)/all.length:null;
-  return {correction,active,direction,scope,counts,todayCounts,todayCompared:todaySamples.length,
-    compared:all.length,sameHourCount:sameHour.length,used:use.length,majorityRatio,mae};
+  return {correction,active,weight,direction,scope,counts,todayCounts,
+    todayCompared:todaySamples.length,compared:all.length,
+    sameHourCount:sameHour.length,used:use.length,majorityRatio,limit,mae};
 }
 
 function classifyNet(net){return net>0.05?'naik':net< -0.05?'turun':'stabil / belum jelas';}
@@ -255,7 +271,17 @@ function operationalForecast(currentTma,now=Date.now()){
 
   // C. Koreksi belajar memakai error prediksi nyata: aktual - prediksi tersimpan.
   const learning=historyLoaded?learnPredictionCorrection(arr,historyEntries,now):null;
-  const learningCorrection=learning?.correction??0;
+  const learningBaseCorrection=learning?.correction??0;
+  // Jika AWLR, netto debit, dan error prediksi terdahulu sepakat arahnya,
+  // beri sedikit penguat KEPERCAYAAN pada koreksi belajar, bukan mengarang
+  // tinggi muka air dari besaran debit.
+  const agreement=learning?.active&&histSign!==0&&reliableSign===histSign
+    &&Math.sign(learningBaseCorrection)===histSign;
+  const learningAgreementFactor=agreement?(learning.used>=3?1.25:1.10):1;
+  const learningCorrection=learning?.active
+    ?Math.max(-learning.limit,Math.min(learning.limit,
+      learningBaseCorrection*learningAgreementFactor))
+    :0;
   let delta=operationDelta+learningCorrection;
   if(Math.abs(delta)<0.0005)delta=0;
 
@@ -272,19 +298,19 @@ function operationalForecast(currentTma,now=Date.now()){
   if(!historyLoaded){
     notes.push('Riwayat prediksi belum selesai dimuat; koreksi belajar belum diterapkan.');
   }else if(learning.active){
-    notes.push('Belajar aktif: dari '+learning.used+' hasil tervalidasi, '+learning.counts.up+' kali prediksi terlalu rendah, '+learning.counts.down+' kali terlalu tinggi, '+learning.counts.stable+' kali tepat. Koreksi '+fmtTrend(learningCorrection)+' m ('+learning.scope+').');
+    notes.push('Belajar dari '+learning.used+' hasil aktual ('+learning.scope+'): '+learning.counts.up+' kali prediksi terlalu rendah, '+learning.counts.down+' terlalu tinggi, '+learning.counts.stable+' tepat. Bobot koreksi '+(learning.weight*100).toFixed(0)+'%, batas ±'+(learning.limit*100).toFixed(0)+' cm, koreksi akhir '+fmtTrend(learningCorrection)+' m.'+(agreement?' AWLR, operasi, dan riwayat error searah: koreksi diperkuat '+(learningAgreementFactor*100).toFixed(0)+'%, tetap di dalam batas.':''));
   }else{
-    notes.push('Belajar belum menambah koreksi: '+(learning?.compared??0)+' hasil prediksi sudah diberi nilai aktual manual; perlu sedikitnya 3 evaluasi hari ini/jam target sama atau 5 gabungan jam dan arah error dominan.');
+    notes.push('Belajar belum mengoreksi: '+(learning?.compared??0)+' evaluasi aktual ditemukan. Arah kesalahan belum jelas, berimbang, atau di bawah pembulatan.');
   }
   if(ref.readingCount<10)notes.push('Hanya '+ref.readingCount+' dari 13 pembacaan dalam interval AWLR kemarin; periksa kelengkapan data.');
   if(Math.abs(delta)<0.005)notes.push('Perubahan akhir kurang dari 0,5 cm sehingga dapat tampil 0,00 m saat dibulatkan dua desimal.');
   const p0=wibParts(now),p1=wibParts(now+HOUR_MS);
   if(operationHours[p0.hour].mode!==operationHours[p1.hour].mode)
     notes.push('Jeda Base/Peak '+operationLag+' menit ikut dalam rata-rata neraca debit.');
-  notes.push('Koreksi operasi maksimal 25% perubahan AWLR kemarin; bobot ini masih asumsi percobaan. Koreksi belajar dibatasi ±3 cm dan baru aktif setelah cukup TMA aktual tercatat. Jangan gunakan sebagai dasar tunggal keputusan operasi bendungan.');
+  notes.push('Koreksi operasi maksimal 25% perubahan AWLR kemarin (asumsi uji coba). Koreksi belajar: satu hasil maksimal 1 cm; dua hasil maksimal 1,5 cm; tiga atau lebih maksimal 3 cm. Seluruh bobot perlu diuji terhadap AWLR aktual. Jangan gunakan sebagai dasar tunggal keputusan operasi bendungan.');
   return {
     delta,predicted:currentTma+delta,awlrDelta,operationDelta,operationWeight,operationApplied,
-    learning,learningCorrection,
+    learning,learningCorrection,learningBaseCorrection,learningAgreementFactor,learningAgreement:agreement,
     referenceDate:ref.referenceDate,referenceStart:ref.startTime,referenceEnd:ref.endTime,
     referenceCount:ref.readingCount,referenceDaysBack:1,
     referenceFirstTma:ref.firstTma,referenceLastTma:ref.lastTma,
@@ -316,7 +342,7 @@ form.addEventListener('submit',ev=>{
     const learnMessage=f.learning
       ? 'Dari '+f.learning.compared+' hasil yang sudah diberi TMA aktual: '+f.learning.counts.up+' prediksi terlalu rendah, '+f.learning.counts.down+' terlalu tinggi, '+f.learning.counts.stable+' tepat ('+f.learning.used+' dipakai). Hari ini: '+f.learning.todayCounts.up+' kali prediksi terlalu rendah, '+f.learning.todayCounts.down+' kali terlalu tinggi. MAE '+(f.learning.mae===null?'belum ada':(f.learning.mae*100).toFixed(1)+' cm')+'.'
       : 'Riwayat prediksi sedang dimuat.';
-    el('forecastDetails').textContent='AWLR kemarin: '+fmt(f.referenceFirstTma)+' → '+fmt(f.referenceLastTma)+' mdpl; selisih '+fmtTrend(f.awlrDelta)+' m. Setelah pengaruh operasi: '+fmtTrend(f.operationDelta)+' m (pengali '+(f.operationApplied?(f.operationDelta/f.awlrDelta).toFixed(2):'1.00')+'×). Koreksi belajar: '+fmtTrend(f.learningCorrection)+' m. '+learnMessage+' Netto debit: '+(f.net>=0?'+':'')+fmt(f.net)+' m³/s ('+f.opDirection+'); rentang outflow ±2: '+fmt(f.netLow)+' s.d. '+fmt(f.netHigh)+' m³/s. Rumus: TMA sekarang + perubahan AWLR kemarin yang dikoreksi operasi + koreksi belajar.';
+    el('forecastDetails').textContent='AWLR kemarin: '+fmt(f.referenceFirstTma)+' → '+fmt(f.referenceLastTma)+' mdpl; selisih '+fmtTrend(f.awlrDelta)+' m. Setelah pengaruh operasi: '+fmtTrend(f.operationDelta)+' m (pengali '+(f.operationApplied?(f.operationDelta/f.awlrDelta).toFixed(2):'1.00')+'×). Koreksi belajar: '+fmtTrend(f.learningCorrection)+' m (bobot '+(f.learning?(f.learning.weight*100).toFixed(0):'0')+'%'+(f.learningAgreement?', penguat kesepakatan '+(f.learningAgreementFactor*100).toFixed(0)+'%':'')+'). '+learnMessage+' Netto debit: '+(f.net>=0?'+':'')+fmt(f.net)+' m³/s ('+f.opDirection+'); rentang outflow ±2: '+fmt(f.netLow)+' s.d. '+fmt(f.netHigh)+' m³/s. Rumus: TMA sekarang + perubahan AWLR kemarin yang dikoreksi operasi + koreksi belajar.';
     el('forecastWarnings').textContent=f.notes.join(' ');
     result.classList.add('show');
     saveCheck(currentRounded,predictedRounded,deltaRounded,f.referenceCount);
