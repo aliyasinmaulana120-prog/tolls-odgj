@@ -18,6 +18,19 @@
 .op-alert{background:#fff7e9;color:#79541c;border-radius:9px;padding:10px;margin:10px 0;font-size:12px;line-height:1.5}
 .result .meta{font-size:12px;color:#517187;line-height:1.65;overflow-wrap:anywhere}
 .result .note-warning{font-size:12px;color:#865824;margin-top:9px;line-height:1.5}
+
+/* Evaluasi TMA aktual pada riwayat prediksi */
+.history-row{align-items:flex-start}
+.history-main{flex:1}
+.actual-review{margin-top:10px;padding:10px;border:1px solid #d4e6ee;border-radius:10px;background:#eef8fc}
+.actual-review label{font-size:12px;margin-bottom:6px}
+.actual-inline{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.actual-inline input{width:130px;max-width:100%;font-size:16px;font-weight:650;padding:9px 10px;border-radius:8px}
+.actual-inline button{width:auto;margin:0;padding:10px 12px;font-size:12px}
+.actual-metric{margin-top:7px;color:#245b71;font-size:12px;line-height:1.55}
+.actual-time{font-size:11px;color:#647c90;line-height:1.55;margin-top:5px}
+.actual-time.warn{color:#955d19}
+@media(max-width:450px){.history-row{flex-wrap:wrap}.delete-one{margin-left:auto}}
 </style></head><body><main class="wrap"><div class="head"><img src="logo-odgj.png" class="logoimg" alt="Logo ODGJ"><div><strong>Tolls ODGJ</strong><div class="muted">AWLR + Pola Operasi · 1 jam ke depan</div></div></div><section class="card"><div class="auth" id="authPanel"><div class="eyebrow">Akun pribadi</div><div class="auth-fields" id="loginFields"><label for="email">Email</label><input autocomplete="email" id="email" placeholder="email@contoh.com" type="email"/><label for="password">Password</label><input autocomplete="current-password" id="password" placeholder="Minimal 6 karakter" type="password"/><button id="loginBtn" type="button">Masuk</button><button class="secondary" id="registerBtn" type="button">Daftar akun</button></div><div hidden="" id="accountPanel"><p id="accountEmail"></p><button class="secondary" id="logoutBtn" type="button">Keluar akun</button></div><div aria-live="polite" class="auth-message" id="authMessage"></div></div><form hidden="" id="f"><label for="tma">TMA</label><div class="inp"><input aria-describedby="petunjuk" autocomplete="off" autofocus="" id="tma" inputmode="decimal" placeholder="Contoh: 66,50" required="" type="text"/><span class="unit">mdpl</span></div><div class="hint" id="petunjuk">Masukkan angka lalu tekan <b>Enter</b>.</div><button type="submit">Prediksi 1 Jam Berikutnya →</button></form><div class="error" id="err" role="alert"></div><section aria-live="polite" class="result" id="result"><div class="eyebrow">Perkiraan TMA +1 jam</div><div class="val" id="hasil"></div><span class="pill" id="delta"></span><div class="line"></div><small id="caption"></small><div class="meta" id="forecastDetails" style="margin-top:9px"></div><div class="note-warning" id="forecastWarnings"></div></section><section class="awlr-upload" id="awlrPanel" hidden style="margin-top:20px;padding:16px;border:1px solid #dbe7ee;border-radius:14px;background:#f9fcfe"><strong>Belajar dari Excel AWLR</strong><p style="font-size:12px;color:#64798b;line-height:1.5">Prediksi hanya memakai selisih TMA AWLR kemarin pada jam pembanding yang sama selama 1 jam. Contoh: AWLR kemarin 18.25–19.25 naik 0,20 m, maka prediksi hari ini menambahkan 0,20 m ke TMA yang Anda input. Neraca debit dari PWW + irigasi − outflow ikut memengaruhi arah dan besarnya perubahan prediksi. Ketidakpastian outflow ±2 m³/s dipakai untuk menilai kekuatan sinyal, bukan ditambahkan langsung ke TMA. Setelah AWLR aktual pada jam target tersedia, sistem mempelajari apakah prediksi sebelumnya lebih sering terlalu rendah atau terlalu tinggi. Koreksi belajar tidak mengubah sumber AWLR dan tidak mencampur selisih AWLR dari banyak hari. Jika data kemarin belum tersedia, sistem meminta upload AWLR kemarin.</p><input id="awlrFiles" type="file" accept=".xlsx,.xls" multiple style="font-size:13px;padding:10px;border:1px solid #cbdbe7;border-radius:10px;width:100%"><button type="button" id="uploadAwlr">Upload Data AWLR</button><div id="awlrStatus" style="margin-top:8px;font-size:12px;color:#476176" role="status"></div></section><section class="op-panel" id="opPanel" hidden>
 <h3>Pola Operasi Bendungan · 24 Jam WIB</h3>
 <div class="op-help">Atur Base / Peak, PWW, irigasi, dan outflow nominal per jam. Inflow = PWW + irigasi (m³/s). Angka contoh awal belum berlaku sampai Anda klik <b>Simpan pola operasi</b>. Setelah tersimpan, setiap perubahan akan disimpan otomatis ke akun Supabase.</div>
@@ -43,7 +56,7 @@ const DEFAULT_HOURS=Array.from({length:24},(_,hour)=>({
 }));
 let operationHours=DEFAULT_HOURS.map(x=>({...x}));
 let operationLag=18, operationSaved=false, operationDirty=false, operationTimer=null;
-let client=null, user=null, historyEntries=[], awlrObservations=[], historyLoaded=false;
+let client=null, user=null, historyEntries=[], awlrObservations=[], historyLoaded=false, actualColumnsReady=true;
 const fNumber=x=>Number(String(x).replace(',','.'));
 function wibParts(time){
   const parts=new Intl.DateTimeFormat('en-GB',{timeZone:WIB_TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(time));
@@ -128,46 +141,49 @@ function yesterdayAwlrPair(arr,now){
   };
 }
 
-// Periksa prediksi lama terhadap AWLR aktual pada +1 jam yang dibulatkan ke 5 menit ke atas.
-// Contoh cek 18:22 WIB dibanding dengan AWLR 19:25 WIB.
-// Hanya gunakan AWLR yang sudah tersedia pada waktu prediksi sekarang (tidak bocor data masa depan).
-function completedPredictionChecks(arr,checks,now){
+// Nilai aktual dimasukkan pengguna setelah waktu target +1 jam tercapai.
+// Satu target waktu hanya dihitung sekali walaupun tombol prediksi ditekan berkali-kali.
+function completedPredictionChecks(_arr,checks,now){
   const byTarget=new Map();
   for(const check of checks){
-    const created=Date.parse(check.created_at),predicted=Number(check.predicted_tma);
-    if(!Number.isFinite(created)||!Number.isFinite(predicted)||created>=now)continue;
+    if(check.actual_tma===null||check.actual_tma===undefined||check.actual_tma==='')continue;
+    const created=Date.parse(check.created_at);
+    const recorded=Date.parse(check.actual_recorded_at);
+    const predicted=Number(check.predicted_tma),actual=Number(check.actual_tma);
+    if(!Number.isFinite(created)||!Number.isFinite(recorded)||!Number.isFinite(predicted)||!Number.isFinite(actual))continue;
     const target=ceilFiveMinuteClock(created)+HOUR_MS;
-    if(target>now)continue;
-    const actual=near(arr,target,150*1000);
-    if(!actual||actual.t>now)continue;
-    const error=actual.v-predicted; // (+) prediksi kurang tinggi; (-) prediksi terlalu tinggi.
+    if(created>=now||target>now||recorded>now||recorded<target)continue;
+    const error=actual-predicted; // (+) prediksi terlalu rendah; (-) terlalu tinggi
     if(!Number.isFinite(error)||Math.abs(error)>0.75)continue;
     const ageDays=(now-target)/DAY_MS;
     if(ageDays<0||ageDays>14)continue;
-    const sample={target,created,error,ageDays,actual:actual.v,predicted};
-    const key=String(target),previous=byTarget.get(key);
-    // Hanya satu cek per target 5 menit agar banyak klik tidak dianggap banyak bukti.
-    if(!previous||created>previous.created)byTarget.set(key,sample);
+    const sample={target,created,error,ageDays,actual,predicted};
+    const key=String(target),prev=byTarget.get(key);
+    if(!prev||created>prev.created)byTarget.set(key,sample);
   }
   return [...byTarget.values()].sort((a,b)=>a.target-b.target);
 }
 
-// Koreksi hanya diaktifkan kalau cukup banyak prediksi sudah benar-benar dibandingkan
-// dengan AWLR aktual. Arah dipilih dari mayoritas error, bukan dari satu kasus ekstrem.
+// Hitung apakah hasil prediksi lebih sering terlalu tinggi atau terlalu rendah.
+// Prioritas koreksi hari ini jika >=3 evaluasi sah; selain itu pakai jam serupa,
+// atau gabungan jam 14 hari terakhir jika sampelnya mencukupi.
 function learnPredictionCorrection(arr,checks,now){
   const all=completedPredictionChecks(arr,checks,now);
   const targetHour=wibParts(ceilFiveMinuteClock(now)+HOUR_MS).hour;
+  const today=wibParts(now).date;
+  const todaySamples=all.filter(x=>wibParts(x.target).date===today);
   const sameHour=all.filter(x=>wibParts(x.target).hour===targetHour);
   let use=[],scope='belum cukup data';
-  if(sameHour.length>=3){use=sameHour;scope='jam target sama';}
-  else if(all.length>=5){use=all;scope='gabungan jam';}
-
+  if(todaySamples.length>=3){use=todaySamples;scope='hasil hari ini';}
+  else if(sameHour.length>=3){use=sameHour;scope='jam target yang sama';}
+  else if(all.length>=5){use=all;scope='gabungan jam 14 hari';}
   const countDirections=xs=>({
     up:xs.filter(x=>x.error>=0.005).length,
     down:xs.filter(x=>x.error<=-0.005).length,
     stable:xs.filter(x=>Math.abs(x.error)<0.005).length
   });
   const counts=countDirections(use);
+  const todayCounts=countDirections(todaySamples);
   const nInfo=counts.up+counts.down;
   let correction=0,active=false,direction='belum jelas',majorityRatio=0;
   if(use.length>=3&&nInfo>=3){
@@ -177,23 +193,18 @@ function learnPredictionCorrection(arr,checks,now){
     if((leadUp||leadDown)&&majorityRatio>=0.60){
       direction=leadUp?'prediksi sering terlalu rendah':'prediksi sering terlalu tinggi';
       const sign=leadUp?1:-1;
-      // Besar koreksi dari median magnitudo error satu arah, bukan rata-rata yang mudah dikuasai outlier.
       const sameSign=use.filter(x=>Math.sign(x.error)===sign&&Math.abs(x.error)>=0.005);
       const magnitudes=sameSign.map(x=>Math.min(0.15,Math.abs(x.error)));
       const typical=medianNums(magnitudes);
       const confidence=use.length/(use.length+3);
-      const strength=scope==='jam target sama'?0.65:0.45;
+      const strength=scope==='hasil hari ini'?0.65:scope==='jam target yang sama'?0.65:0.45;
       correction=sign*Math.min(0.03,typical*confidence*strength*majorityRatio);
       active=true;
-    }else{
-      direction='error naik dan turun masih berimbang';
-    }
+    }else direction='error naik dan turun masih berimbang';
   }
-  const mae=all.length?all.reduce((s,x)=>s+Math.abs(x.error),0)/all.length:null;
-  return {
-    correction,active,direction,scope,counts,compared:all.length,
-    sameHourCount:sameHour.length,used:use.length,majorityRatio,mae
-  };
+  const mae=all.length?all.reduce((sum,x)=>sum+Math.abs(x.error),0)/all.length:null;
+  return {correction,active,direction,scope,counts,todayCounts,todayCompared:todaySamples.length,
+    compared:all.length,sameHourCount:sameHour.length,used:use.length,majorityRatio,mae};
 }
 
 function classifyNet(net){return net>0.05?'naik':net< -0.05?'turun':'stabil / belum jelas';}
@@ -251,14 +262,14 @@ function operationalForecast(currentTma,now=Date.now()){
   }else if(learning.active){
     notes.push('Belajar aktif: dari '+learning.used+' hasil tervalidasi, '+learning.counts.up+' kali prediksi terlalu rendah, '+learning.counts.down+' kali terlalu tinggi, '+learning.counts.stable+' kali tepat. Koreksi '+fmtTrend(learningCorrection)+' m ('+learning.scope+').');
   }else{
-    notes.push('Belajar belum menambah koreksi: '+(learning?.compared??0)+' hasil prediksi sudah cocok dengan AWLR aktual; perlu sedikitnya 3 pada jam target sama atau 5 gabungan jam dan arah error dominan.');
+    notes.push('Belajar belum menambah koreksi: '+(learning?.compared??0)+' hasil prediksi sudah diberi nilai aktual manual; perlu sedikitnya 3 evaluasi hari ini/jam target sama atau 5 gabungan jam dan arah error dominan.');
   }
   if(ref.readingCount<10)notes.push('Hanya '+ref.readingCount+' dari 13 pembacaan dalam interval AWLR kemarin; periksa kelengkapan data.');
   if(Math.abs(delta)<0.005)notes.push('Perubahan akhir kurang dari 0,5 cm sehingga dapat tampil 0,00 m saat dibulatkan dua desimal.');
   const p0=wibParts(now),p1=wibParts(now+HOUR_MS);
   if(operationHours[p0.hour].mode!==operationHours[p1.hour].mode)
     notes.push('Jeda Base/Peak '+operationLag+' menit ikut dalam rata-rata neraca debit.');
-  notes.push('Koreksi belajar dibatasi ±3 cm dan bersifat uji coba. Hasil perlu diuji terhadap AWLR aktual sebelum dipakai untuk keputusan operasi bendungan.');
+  notes.push('Koreksi belajar dibatasi ±3 cm dan memakai TMA aktual yang diisi pada riwayat setelah waktu target. Ini masih uji coba, bukan dasar tunggal keputusan operasi bendungan.');
   return {
     delta,predicted:currentTma+delta,awlrDelta,operationDelta,operationWeight,operationApplied,
     learning,learningCorrection,
@@ -289,9 +300,9 @@ form.addEventListener('submit',ev=>{
       el('delta').textContent=direction+fmt(Math.abs(deltaRounded))+' m ('+(deltaRounded*100).toLocaleString('id-ID',{minimumFractionDigits:0,maximumFractionDigits:0})+' cm)';
     }
     const fmtWibTime=t=>new Intl.DateTimeFormat('id-ID',{timeZone:WIB_TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(t));
-    el('caption').textContent='AWLR kemarin: '+f.referenceDate+', pukul '+fmtWibTime(f.referenceStart)+'–'+fmtWibTime(f.referenceEnd)+' WIB ('+f.referenceCount+' dari 13 titik pembacaan).';
+    el('caption').textContent='AWLR kemarin: '+f.referenceDate+', pukul '+fmtWibTime(f.referenceStart)+'–'+fmtWibTime(f.referenceEnd)+' WIB ('+f.referenceCount+' dari 13 titik). Setelah 1 jam, isi TMA aktual pada baris riwayat prediksi di bawah.';
     const learnMessage=f.learning
-      ? 'Dari '+f.learning.compared+' hasil cek yang cocok: '+f.learning.counts.up+' prediksi terlalu rendah, '+f.learning.counts.down+' terlalu tinggi, '+f.learning.counts.stable+' tepat ('+f.learning.used+' dipakai). MAE '+(f.learning.mae===null?'belum ada':(f.learning.mae*100).toFixed(1)+' cm')+'.'
+      ? 'Dari '+f.learning.compared+' hasil yang sudah diberi TMA aktual: '+f.learning.counts.up+' prediksi terlalu rendah, '+f.learning.counts.down+' terlalu tinggi, '+f.learning.counts.stable+' tepat ('+f.learning.used+' dipakai). Hari ini: '+f.learning.todayCounts.up+' kali prediksi terlalu rendah, '+f.learning.todayCounts.down+' kali terlalu tinggi. MAE '+(f.learning.mae===null?'belum ada':(f.learning.mae*100).toFixed(1)+' cm')+'.'
       : 'Riwayat prediksi sedang dimuat.';
     el('forecastDetails').textContent='AWLR kemarin: '+fmt(f.referenceFirstTma)+' → '+fmt(f.referenceLastTma)+' mdpl; selisih '+fmtTrend(f.awlrDelta)+' m. Setelah pengaruh operasi: '+fmtTrend(f.operationDelta)+' m. Koreksi belajar: '+fmtTrend(f.learningCorrection)+' m. '+learnMessage+' Netto debit: '+(f.net>=0?'+':'')+fmt(f.net)+' m³/s ('+f.opDirection+'); rentang outflow ±2: '+fmt(f.netLow)+' s.d. '+fmt(f.netHigh)+' m³/s. Rumus: TMA sekarang + perubahan AWLR kemarin yang dikoreksi operasi + koreksi belajar.';
     el('forecastWarnings').textContent=f.notes.join(' ');
@@ -485,30 +496,135 @@ const todayWib=()=>wibDate(new Date().toISOString());
 let selectedDate=todayWib();
 el('historyDate').value=selectedDate;
 function filteredHistory(){return historyEntries.filter(x=>wibDate(x.created_at)===selectedDate)}
+function fmtWibLong(iso){
+  return new Date(iso).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short',timeZone:WIB_TZ})+' WIB';
+}
+function historicalActualSummary(){
+  if(!historyLoaded)return 'Riwayat prediksi sedang dimuat.';
+  const outcomes=completedPredictionChecks([],historyEntries,Date.now());
+  const today=wibParts(Date.now()).date;
+  const subset=outcomes.filter(x=>wibParts(x.target).date===today);
+  const tooLow=subset.filter(x=>x.error>=0.005).length;
+  const tooHigh=subset.filter(x=>x.error<=-0.005).length;
+  const onTarget=subset.length-tooLow-tooHigh;
+  return 'TMA aktual yang sudah dinilai hari ini: '+subset.length+' · Prediksi terlalu rendah: '+tooLow+' · Terlalu tinggi: '+tooHigh+' · Tepat: '+onTarget+'.';
+}
 function drawHistory(){
   const visible=filteredHistory();historyList.replaceChildren();historyEmpty.hidden=visible.length>0;
   historyEmpty.textContent='Belum ada pengecekan pada tanggal ini.';
   clearHistory.hidden=historyEntries.length===0;
-  el('dayCount').textContent=visible.length+' pengecekan pada '+new Date(selectedDate+'T12:00:00+07:00').toLocaleDateString('id-ID',{dateStyle:'full',timeZone:'Asia/Jakarta'})+' · Total tersimpan: '+historyEntries.length;
-  for(const entry of visible){const row=document.createElement('div');row.className='history-row';const main=document.createElement('div');main.className='history-main';const date=document.createElement('div');date.className='history-date';date.textContent=new Date(entry.created_at).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Jakarta'})+' WIB';const vals=document.createElement('div');vals.className='history-values';vals.textContent='Input: '+fmt(Number(entry.current_tma))+' mdpl → ';const predicted=document.createElement('b');predicted.textContent=fmt(Number(entry.predicted_tma))+' mdpl';vals.append(predicted);main.append(date,vals);const del=document.createElement('button');del.className='delete-one';del.type='button';del.textContent='Hapus';del.addEventListener('click',async()=>{if(!clientReady())return;if(!confirm('Hapus pengecekan ini secara permanen?'))return;del.disabled=true;const {error}=await client.from('tma_checks').delete().eq('id',entry.id);if(error){alert('Gagal menghapus: '+error.message);del.disabled=false;return}historyEntries=historyEntries.filter(x=>x.id!==entry.id);drawHistory()});row.append(main,del);historyList.append(row)}
+  el('dayCount').textContent=visible.length+' pengecekan pada '+new Date(selectedDate+'T12:00:00+07:00').toLocaleDateString('id-ID',{dateStyle:'full',timeZone:'Asia/Jakarta'})+' · Total tersimpan: '+historyEntries.length+'\n'+historicalActualSummary();
+  for(const entry of visible){
+    const row=document.createElement('div');row.className='history-row';
+    const main=document.createElement('div');main.className='history-main';
+    const date=document.createElement('div');date.className='history-date';date.textContent=fmtWibLong(entry.created_at);
+    const vals=document.createElement('div');vals.className='history-values';
+    vals.textContent='Input: '+fmt(Number(entry.current_tma))+' mdpl → Prediksi: ';
+    const predicted=document.createElement('b');predicted.textContent=fmt(Number(entry.predicted_tma))+' mdpl';vals.append(predicted);
+    main.append(date,vals);
+
+    const target=ceilFiveMinuteClock(Date.parse(entry.created_at))+HOUR_MS;
+    const review=document.createElement('div');review.className='actual-review';
+    const title=document.createElement('label');title.textContent='TMA aktual untuk target '+fmtWibLong(target)+' (mdpl)';
+    const inputRow=document.createElement('div');inputRow.className='actual-inline';
+    const actualInput=document.createElement('input');actualInput.type='text';actualInput.inputMode='decimal';
+    actualInput.placeholder='Misal: 63,88';actualInput.setAttribute('aria-label','TMA aktual '+fmtWibLong(target));
+    actualInput.value=entry.actual_tma===null||entry.actual_tma===undefined?'':fmt(Number(entry.actual_tma));
+    const saveBtn=document.createElement('button');saveBtn.type='button';
+    saveBtn.textContent=entry.actual_tma===null||entry.actual_tma===undefined?'Simpan Aktual':'Perbarui Aktual';
+    const note=document.createElement('div');note.className='actual-time';
+    const metric=document.createElement('div');metric.className='actual-metric';
+    const now=Date.now();
+    if(!actualColumnsReady){
+      actualInput.disabled=true;saveBtn.disabled=true;
+      note.classList.add('warn');note.textContent='Kolom TMA aktual belum terpasang di Supabase. Jalankan file SQL dalam ZIP, lalu muat ulang halaman.';
+    }else if(now<target){
+      actualInput.disabled=true;saveBtn.disabled=true;
+      note.textContent='Belum waktunya. Isi setelah '+fmtWibLong(target)+' menggunakan pembacaan TMA aktual pada waktu target.';
+    }else{
+      note.textContent='Isi TMA aktual pada jam target di atas. Jangan isi dengan TMA waktu sekarang jika berbeda jam.';
+    }
+    function showError(){
+      const raw=actualInput.value.trim().replace(',','.');
+      if(!raw)return metric.textContent='';
+      const actual=Number(raw);
+      if(!Number.isFinite(actual)||actual<0||actual>1000){metric.textContent='Masukkan nilai TMA aktual yang valid.';return;}
+      const rawError=actual-Number(entry.predicted_tma);
+      const trueChange=actual-Number(entry.current_tma);
+      const signed=n=>(n>0?'+':'')+fmt(n);
+      metric.textContent='Perubahan aktual: '+signed(trueChange)+' m ('+Math.round(trueChange*100)+' cm). '+
+        'Error aktual − prediksi: '+signed(rawError)+' m ('+(rawError>0?'+':'')+Math.round(rawError*100)+' cm). '+
+        (rawError>0.005?'Prediksi terlalu rendah.':rawError< -0.005?'Prediksi terlalu tinggi.':'Prediksi tepat / dalam 0,5 cm.');
+    }
+    actualInput.addEventListener('input',showError);
+    showError();
+    saveBtn.addEventListener('click',async()=>{
+      if(!clientReady()||!actualColumnsReady)return;
+      if(Date.now()<target){note.textContent='TMA aktual belum bisa disimpan sebelum waktu target.';return;}
+      const raw=actualInput.value.trim().replace(',','.');const actual=Number(raw);
+      if(!raw||!/^\d+(?:\.\d{1,2})?$/.test(raw)||!Number.isFinite(actual)||actual<0||actual>1000){
+        note.classList.add('warn');note.textContent='Isi nilai TMA aktual yang valid (maksimal 2 angka desimal).';return;
+      }
+      saveBtn.disabled=true;actualInput.disabled=true;note.textContent='Menyimpan TMA aktual ke Supabase...';
+      try{
+        const {data,error}=await client.from('tma_checks').update({actual_tma:round2(actual),actual_recorded_at:new Date().toISOString()})
+          .eq('id',entry.id).eq('user_id',user.id).select('id,actual_tma,actual_recorded_at').single();
+        if(error)throw error;
+        entry.actual_tma=data.actual_tma;entry.actual_recorded_at=data.actual_recorded_at;
+        drawHistory();
+        setStatus('TMA aktual '+fmt(actual)+' mdpl disimpan. Koreksi akan dipelajari pada prediksi berikutnya jika sampelnya cukup.');
+      }catch(e){
+        note.classList.add('warn');note.textContent='Gagal menyimpan TMA aktual: '+e.message+'. Periksa schema Supabase / izin UPDATE.';
+        saveBtn.disabled=false;actualInput.disabled=false;
+      }
+    });
+    inputRow.append(actualInput,saveBtn);review.append(title,inputRow,note,metric);main.append(review);
+    const del=document.createElement('button');del.className='delete-one';del.type='button';del.textContent='Hapus';
+    del.addEventListener('click',async()=>{
+      if(!clientReady())return;if(!confirm('Hapus pengecekan dan nilai aktual ini secara permanen?'))return;
+      del.disabled=true;
+      const {error}=await client.from('tma_checks').delete().eq('id',entry.id).eq('user_id',user.id);
+      if(error){alert('Gagal menghapus: '+error.message);del.disabled=false;return;}
+      historyEntries=historyEntries.filter(x=>x.id!==entry.id);drawHistory();
+    });
+    row.append(main,del);historyList.append(row);
+  }
 }
 async function loadHistory(){
- if(!clientReady())return;
- historyLoaded=false;
- setStatus('Memuat seluruh riwayat dari Supabase...');
- const all=[];const pageSize=500;
- for(let from=0; ;from+=pageSize){
-  const {data,error}=await client.from('tma_checks').select('id,created_at,current_tma,predicted_tma').order('created_at',{ascending:false}).order('id',{ascending:false}).range(from,from+pageSize-1);
-  if(error){setStatus('Gagal memuat riwayat: '+error.message);return}
-  all.push(...(data||[]));if(!data||data.length<pageSize)break;
- }
- historyEntries=all;historyLoaded=true;drawHistory();setStatus('Tersinkron · '+all.length+' pengecekan tersimpan di Supabase.');
+  if(!clientReady())return;
+  historyLoaded=false;setStatus('Memuat seluruh riwayat dari Supabase...');
+  const all=[];const pageSize=500;
+  for(let from=0;;from+=pageSize){
+    const columns=actualColumnsReady?'id,created_at,current_tma,predicted_tma,actual_tma,actual_recorded_at':'id,created_at,current_tma,predicted_tma';
+    const {data,error}=await client.from('tma_checks').select(columns)
+      .eq('user_id',user.id).order('created_at',{ascending:false}).order('id',{ascending:false})
+      .range(from,from+pageSize-1);
+    if(error){
+      if(actualColumnsReady&&/actual_tma|actual_recorded_at|schema cache/i.test(error.message||'')){
+        actualColumnsReady=false;
+        return loadHistory();
+      }
+      setStatus('Gagal memuat riwayat: '+error.message);return;
+    }
+    all.push(...(data||[]));if(!data||data.length<pageSize)break;
+  }
+  historyEntries=all;historyLoaded=true;drawHistory();
+  setStatus(actualColumnsReady?'Tersinkron · '+all.length+' pengecekan tersimpan di Supabase. Isi TMA aktual pada setiap baris riwayat setelah waktu target.':
+    'Riwayat lama berhasil dimuat, tetapi kolom aktual belum tersedia. Jalankan SQL dari ZIP terlebih dahulu.');
 }
 function downloadCSV(entries,filename){
- const rows=[['tanggal_WIB','jam_WIB','tma_input_mdpl','prediksi_1_jam_mdpl','selisih_prediksi_minus_input_m']];
- for(const x of entries){const d=new Date(x.created_at);const date=wibDate(x.created_at);const time=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(d);const current=Number(x.current_tma),pred=Number(x.predicted_tma);rows.push([date,time,round2(current).toFixed(2),round2(pred).toFixed(2),round2(pred-current).toFixed(2)])}
- const csv='\uFEFF'+rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n');
- const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)
+  const rows=[['tanggal_WIB','jam_WIB','tma_input_mdpl','prediksi_1_jam_mdpl','selisih_prediksi_minus_input_m','tma_aktual_mdpl','perubahan_aktual_m','error_aktual_minus_prediksi_m']];
+  for(const x of entries){
+    const d=new Date(x.created_at),date=wibDate(x.created_at);
+    const time=new Intl.DateTimeFormat('en-GB',{timeZone:WIB_TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(d);
+    const current=Number(x.current_tma),pred=Number(x.predicted_tma);
+    const actual=x.actual_tma===null||x.actual_tma===undefined?'':Number(x.actual_tma);
+    rows.push([date,time,round2(current).toFixed(2),round2(pred).toFixed(2),round2(pred-current).toFixed(2),
+      actual===''?'':round2(actual).toFixed(2),actual===''?'':round2(actual-current).toFixed(2),actual===''?'':round2(actual-pred).toFixed(2)]);
+  }
+  const csv='\uFEFF'+rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
 el('historyDate').addEventListener('change',ev=>{if(!ev.target.value)return;selectedDate=ev.target.value;drawHistory()});
 el('todayHistory').addEventListener('click',()=>{selectedDate=todayWib();el('historyDate').value=selectedDate;drawHistory()});
@@ -520,6 +636,6 @@ el('loginBtn').addEventListener('click',async()=>{if(!client)return;setMessage('
 el('registerBtn').addEventListener('click',async()=>{if(!client)return;setMessage('Mendaftarkan akun...');const {error,data}=await client.auth.signUp({email:el('email').value.trim(),password:el('password').value});setMessage(error?'Gagal daftar: '+error.message:data.session?'Akun berhasil dibuat.':'Periksa email untuk konfirmasi pendaftaran, lalu masuk.')});
 el('logoutBtn').addEventListener('click',async()=>{if(client)await client.auth.signOut()});
 async function init(){if(typeof window.supabase==='undefined'){setMessage('Gagal memuat Supabase SDK. Periksa koneksi internet.');return}if(!window.TMA_CONFIG?.url||!window.TMA_CONFIG?.anonKey||window.TMA_CONFIG.url.includes('YOUR_PROJECT')){setMessage('Konfigurasi belum diisi. Buka config.js dan masukkan Supabase Project URL + anon key.');return}try{client=window.supabase.createClient(window.TMA_CONFIG.url,window.TMA_CONFIG.anonKey)}catch(e){setMessage('Konfigurasi tidak valid: '+e.message);return}
-client.auth.onAuthStateChange((_event,session)=>{const newUser=session?.user||null;if(user?.id!==newUser?.id){historyEntries=[];historyLoaded=false;awlrObservations=[];}user=newUser;renderAuth();if(user){setTimeout(loadHistory,0);setTimeout(loadAwlr,0);setTimeout(loadOperation,0)}});const {data,error}=await client.auth.getSession();if(error)setMessage(error.message);user=data?.session?.user||null;renderAuth();if(user){await loadHistory();await loadAwlr();await loadOperation()}}
+client.auth.onAuthStateChange((_event,session)=>{const newUser=session?.user||null;if(user?.id!==newUser?.id){historyEntries=[];historyLoaded=false;awlrObservations=[];actualColumnsReady=true;}user=newUser;renderAuth();if(user){setTimeout(loadHistory,0);setTimeout(loadAwlr,0);setTimeout(loadOperation,0)}});const {data,error}=await client.auth.getSession();if(error)setMessage(error.message);user=data?.session?.user||null;renderAuth();if(user){await loadHistory();await loadAwlr();await loadOperation()}}
 init();
 </script></body></html>
