@@ -31,7 +31,7 @@
 .actual-time{font-size:11px;color:#647c90;line-height:1.55;margin-top:5px}
 .actual-time.warn{color:#955d19}
 @media(max-width:450px){.history-row{flex-wrap:wrap}.delete-one{margin-left:auto}}
-</style></head><body><main class="wrap"><div class="head"><img src="logo-odgj.png" class="logoimg" alt="Logo ODGJ"><div><strong>Tolls ODGJ</strong><div class="muted">AWLR + Pola Operasi · 1 jam ke depan</div></div></div><section class="card"><div class="auth" id="authPanel"><div class="eyebrow">Akun pribadi</div><div class="auth-fields" id="loginFields"><label for="email">Email</label><input autocomplete="email" id="email" placeholder="email@contoh.com" type="email"/><label for="password">Password</label><input autocomplete="current-password" id="password" placeholder="Minimal 6 karakter" type="password"/><button id="loginBtn" type="button">Masuk</button><button class="secondary" id="registerBtn" type="button">Daftar akun</button></div><div hidden="" id="accountPanel"><p id="accountEmail"></p><button class="secondary" id="logoutBtn" type="button">Keluar akun</button></div><div aria-live="polite" class="auth-message" id="authMessage"></div></div><form hidden="" id="f"><label for="tma">TMA</label><div class="inp"><input aria-describedby="petunjuk" autocomplete="off" autofocus="" id="tma" inputmode="decimal" placeholder="Contoh: 66,50" required="" type="text"/><span class="unit">mdpl</span></div><div class="hint" id="petunjuk">Masukkan angka lalu tekan <b>Enter</b>.</div><button type="submit">Prediksi 1 Jam Berikutnya →</button></form><div class="error" id="err" role="alert"></div><section aria-live="polite" class="result" id="result"><div class="eyebrow">Perkiraan TMA +1 jam</div><div class="val" id="hasil"></div><span class="pill" id="delta"></span><div class="line"></div><small id="caption"></small><div class="meta" id="forecastDetails" style="margin-top:9px"></div><div class="note-warning" id="forecastWarnings"></div></section><section class="awlr-upload" id="awlrPanel" hidden style="margin-top:20px;padding:16px;border:1px solid #dbe7ee;border-radius:14px;background:#f9fcfe"><strong>Belajar dari Excel AWLR</strong><p style="font-size:12px;color:#64798b;line-height:1.5">Prediksi hanya memakai selisih TMA AWLR kemarin pada jam pembanding yang sama selama 1 jam. Contoh: AWLR kemarin 18.25–19.25 naik 0,20 m, maka prediksi hari ini menambahkan 0,20 m ke TMA yang Anda input. Neraca debit dari PWW + irigasi − outflow ikut memperkuat atau melemahkan besarnya perubahan AWLR kemarin (uji coba, maksimal 25%). Ketidakpastian outflow ±2 m³/s dipakai untuk menilai kekuatan sinyal, bukan ditambahkan langsung ke TMA. Setelah waktu target tercapai dan TMA aktual Anda isi pada riwayat, sistem menimbang arah serta besarnya kesalahan prediksi sebelumnya. Tiga evaluasi aktual terbaru menjadi koreksi belajar: bobot 50%, 30%, dan 20%. Jika baru ada satu atau dua, bobot yang belum tersedia tidak dihitung; jika tanda error bercampur, koreksi diperkecil. Koreksi dibatasi ±10 cm sebagai pengaman uji coba. Koreksi belajar tidak mengubah sumber AWLR dan tidak mencampur selisih AWLR dari banyak hari. Jika data kemarin belum tersedia, sistem meminta upload AWLR kemarin.</p><input id="awlrFiles" type="file" accept=".xlsx,.xls" multiple style="font-size:13px;padding:10px;border:1px solid #cbdbe7;border-radius:10px;width:100%"><button type="button" id="uploadAwlr">Upload Data AWLR</button><div id="awlrStatus" style="margin-top:8px;font-size:12px;color:#476176" role="status"></div></section><section class="op-panel" id="opPanel" hidden>
+</style></head><body><main class="wrap"><div class="head"><img src="logo-odgj.png" class="logoimg" alt="Logo ODGJ"><div><strong>Tolls ODGJ</strong><div class="muted">AWLR + Pola Operasi · 1 jam ke depan</div></div></div><section class="card"><div class="auth" id="authPanel"><div class="eyebrow">Akun pribadi</div><div class="auth-fields" id="loginFields"><label for="email">Email</label><input autocomplete="email" id="email" placeholder="email@contoh.com" type="email"/><label for="password">Password</label><input autocomplete="current-password" id="password" placeholder="Minimal 6 karakter" type="password"/><button id="loginBtn" type="button">Masuk</button><button class="secondary" id="registerBtn" type="button">Daftar akun</button></div><div hidden="" id="accountPanel"><p id="accountEmail"></p><button class="secondary" id="logoutBtn" type="button">Keluar akun</button></div><div aria-live="polite" class="auth-message" id="authMessage"></div></div><form hidden="" id="f"><label for="tma">TMA</label><div class="inp"><input aria-describedby="petunjuk" autocomplete="off" autofocus="" id="tma" inputmode="decimal" placeholder="Contoh: 66,50" required="" type="text"/><span class="unit">mdpl</span></div><div class="hint" id="petunjuk">Masukkan angka lalu tekan <b>Enter</b>.</div><button type="submit">Prediksi 1 Jam Berikutnya →</button></form><div class="error" id="err" role="alert"></div><section aria-live="polite" class="result" id="result"><div class="eyebrow">Perkiraan TMA +1 jam</div><div class="val" id="hasil"></div><span class="pill" id="delta"></span><div class="line"></div><small id="caption"></small><div class="meta" id="forecastDetails" style="margin-top:9px"></div><div class="note-warning" id="forecastWarnings"></div></section><section class="awlr-upload" id="awlrPanel" hidden style="margin-top:20px;padding:16px;border:1px solid #dbe7ee;border-radius:14px;background:#f9fcfe"><strong>Belajar dari Excel AWLR</strong><p style="font-size:12px;color:#64798b;line-height:1.5">Waktu pembanding +1 jam dibulatkan ke kelipatan 5 menit TERDEKAT (contoh 10.23 → 11.25, 13.42 → 14.40). Angka TMA tidak dibulatkan ke kelipatan 5 cm. Prediksi memakai selisih TMA AWLR kemarin pada jam pembanding yang sama selama 1 jam. Contoh: AWLR kemarin 18.25–19.25 naik 0,20 m, maka prediksi hari ini menambahkan 0,20 m ke TMA yang Anda input. Neraca debit dari PWW + irigasi − outflow ikut memperkuat atau melemahkan besarnya perubahan AWLR kemarin (uji coba, maksimal 25%). Ketidakpastian outflow ±2 m³/s dipakai untuk menilai kekuatan sinyal, bukan ditambahkan langsung ke TMA. Setelah waktu target tercapai dan TMA aktual Anda isi pada riwayat, sistem menimbang arah serta besarnya kesalahan prediksi sebelumnya. Tiga evaluasi aktual terbaru menjadi koreksi belajar: bobot 50%, 30%, dan 20%. Jika baru ada satu atau dua, bobot yang belum tersedia tidak dihitung; jika tanda error bercampur, koreksi diperkecil. Koreksi dibatasi ±10 cm sebagai pengaman uji coba. Koreksi belajar tidak mengubah sumber AWLR dan tidak mencampur selisih AWLR dari banyak hari. Jika data kemarin belum tersedia, sistem meminta upload AWLR kemarin.</p><input id="awlrFiles" type="file" accept=".xlsx,.xls" multiple style="font-size:13px;padding:10px;border:1px solid #cbdbe7;border-radius:10px;width:100%"><button type="button" id="uploadAwlr">Upload Data AWLR</button><div id="awlrStatus" style="margin-top:8px;font-size:12px;color:#476176" role="status"></div></section><section class="op-panel" id="opPanel" hidden>
 <h3>Pola Operasi Bendungan · 24 Jam WIB</h3>
 <div class="op-help">Atur Base / Peak, PWW, irigasi, dan outflow nominal per jam. Inflow = PWW + irigasi (m³/s). Angka contoh awal belum berlaku sampai Anda klik <b>Simpan pola operasi</b>. Setelah tersimpan, setiap perubahan akan disimpan otomatis ke akun Supabase.</div>
 <div class="op-alert" id="opNotice">Memuat pengaturan pola operasi...</div>
@@ -111,11 +111,13 @@ function near(arr,t,maxGap=3*60000){
   let best=null;for(const i of [lo-1,lo])if(i>=0&&i<arr.length){const r=arr[i];if(Math.abs(r.t-t)<=maxGap&&(!best||Math.abs(r.t-t)<Math.abs(best.t-t)))best=r;}
   return best;
 }
-// Pengguna memilih waktu pembanding ke atas dalam kelipatan lima menit.
-// Detik saat klik diabaikan: 18:25:42 tetap mengacu ke 18:25, bukan 18:30.
-function ceilFiveMinuteClock(time){
+// Pembulatan ke 5 MENIT TERDEKAT, bukan selalu ke atas.
+// Abaikan detik saat prediksi dibuat: 10:23 -> 10:25, 13:42 -> 13:40.
+// Waktu aktual pembanding adalah jam prediksi + 1 jam yang telah dibulatkan.
+// Menit 00-02 -> 00, 03-07 -> 05, 08-12 -> 10, dst.
+function roundFiveMinuteClock(time){
   const minuteStart=Math.floor(time/60000)*60000;
-  return Math.ceil(minuteStart/FIVE_MIN_MS)*FIVE_MIN_MS;
+  return Math.round(minuteStart/FIVE_MIN_MS)*FIVE_MIN_MS;
 }
 function countHourReadings(arr,start,end){
   // Semua data yang tercatat sekitar masing-masing titik 5-menit pada rentang 1 jam.
@@ -128,7 +130,7 @@ function countHourReadings(arr,start,end){
 // Tepat SATU pasangan: AWLR satu hari sebelumnya pada jam + menit pembanding.
 // Tidak mengambil rata-rata banyak hari, tidak mencari hari lain, tidak mengganti arah.
 function yesterdayAwlrPair(arr,now){
-  const anchor=ceilFiveMinuteClock(now);
+  const anchor=roundFiveMinuteClock(now);
   const start=anchor-DAY_MS,end=start+HOUR_MS;
   const first=near(arr,start,90*1000),last=near(arr,end,90*1000);
   if(!first||!last)return null;
@@ -151,7 +153,7 @@ function completedPredictionChecks(_arr,checks,now){
     const recorded=Date.parse(check.actual_recorded_at);
     const predicted=Number(check.predicted_tma),actual=Number(check.actual_tma);
     if(!Number.isFinite(created)||!Number.isFinite(recorded)||!Number.isFinite(predicted)||!Number.isFinite(actual))continue;
-    const target=ceilFiveMinuteClock(created)+HOUR_MS;
+    const target=roundFiveMinuteClock(created)+HOUR_MS;
     if(created>=now||target>now||recorded>now||recorded<target)continue;
     const error=actual-predicted; // (+) prediksi terlalu rendah; (-) terlalu tinggi
     if(!Number.isFinite(error)||Math.abs(error)>0.75)continue;
@@ -236,7 +238,7 @@ function operationalForecast(currentTma,now=Date.now()){
 
   const arr=readings(),ref=yesterdayAwlrPair(arr,now);
   if(!ref){
-    const anchor=ceilFiveMinuteClock(now)-DAY_MS;
+    const anchor=roundFiveMinuteClock(now)-DAY_MS;
     const toClock=t=>new Intl.DateTimeFormat('id-ID',{timeZone:WIB_TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(t));
     throw Error('Data AWLR kemarin ('+wibParts(anchor).date+') pada '+toClock(anchor)+'–'+toClock(anchor+HOUR_MS)+' WIB belum tersedia lengkap di awal/akhir interval. Upload Excel AWLR kemarin; sistem tidak mengambil data hari lain.');
   }
@@ -295,7 +297,7 @@ function operationalForecast(currentTma,now=Date.now()){
   return {
     delta,predicted:currentTma+delta,awlrDelta,operationDelta,operationWeight,operationApplied,
     learning,learningCorrection,
-    referenceDate:ref.referenceDate,referenceStart:ref.startTime,referenceEnd:ref.endTime,
+    targetTime:ref.anchor+HOUR_MS,referenceDate:ref.referenceDate,referenceStart:ref.startTime,referenceEnd:ref.endTime,
     referenceCount:ref.readingCount,referenceDaysBack:1,
     referenceFirstTma:ref.firstTma,referenceLastTma:ref.lastTma,
     net,netLow,netHigh,opDirection,histDirection,reliableSign,notes
@@ -322,7 +324,7 @@ form.addEventListener('submit',ev=>{
       el('delta').textContent=direction+fmt(Math.abs(deltaRounded))+' m ('+(deltaRounded*100).toLocaleString('id-ID',{minimumFractionDigits:0,maximumFractionDigits:0})+' cm)';
     }
     const fmtWibTime=t=>new Intl.DateTimeFormat('id-ID',{timeZone:WIB_TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(t));
-    el('caption').textContent='AWLR kemarin: '+f.referenceDate+', pukul '+fmtWibTime(f.referenceStart)+'–'+fmtWibTime(f.referenceEnd)+' WIB ('+f.referenceCount+' dari 13 titik). Setelah 1 jam, isi TMA aktual pada baris riwayat prediksi di bawah.';
+    el('caption').textContent='AWLR kemarin: '+f.referenceDate+', pukul '+fmtWibTime(f.referenceStart)+'–'+fmtWibTime(f.referenceEnd)+' WIB ('+f.referenceCount+' dari 13 titik). Jam target aktual: '+fmtWibTime(f.targetTime)+' WIB (dibulatkan ke 5 menit terdekat). Setelah itu, isi TMA aktual di riwayat.';
     const learnMessage=f.learning
       ? 'Dari '+f.learning.compared+' evaluasi aktual sah, '+f.learning.used+' terbaru dipakai ('+
          f.learning.counts.up+' terlalu rendah, '+f.learning.counts.down+' terlalu tinggi, '+
@@ -559,7 +561,7 @@ function drawHistory(){
     const predicted=document.createElement('b');predicted.textContent=fmt(Number(entry.predicted_tma))+' mdpl';vals.append(predicted);
     main.append(date,vals);
 
-    const target=ceilFiveMinuteClock(Date.parse(entry.created_at))+HOUR_MS;
+    const target=roundFiveMinuteClock(Date.parse(entry.created_at))+HOUR_MS;
     const review=document.createElement('div');review.className='actual-review';
     const title=document.createElement('label');title.textContent='TMA aktual untuk target '+fmtWibLong(target)+' (mdpl)';
     const inputRow=document.createElement('div');inputRow.className='actual-inline';
@@ -578,7 +580,7 @@ function drawHistory(){
       actualInput.disabled=true;saveBtn.disabled=true;
       note.textContent='Belum waktunya. Isi setelah '+fmtWibLong(target)+' menggunakan pembacaan TMA aktual pada waktu target.';
     }else{
-      note.textContent='Isi TMA aktual pada jam target di atas. Jangan isi dengan TMA waktu sekarang jika berbeda jam.';
+      note.textContent='Jam target = 1 jam setelah pengecekan, dibulatkan ke 5 menit terdekat. Isi AWLR aktual pada jam target tersebut, bukan TMA waktu lain.';
     }
     function showError(){
       const raw=actualInput.value.trim().replace(',','.');
